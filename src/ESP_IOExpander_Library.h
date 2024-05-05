@@ -12,5 +12,6 @@
 #include "chip/TCA95xx_8bit.h"
 #include "chip/TCA95xx_16bit.h"
 #include "chip/HT8574.h"
+#include "chip/CH422G.h"
 
 #endif
