@@ -1,23 +1,31 @@
 #include <Arduino.h>
 #include <ESP_IOExpander_Library.h>
 
+/**
+ * Create an ESP_IOExpander object, Currently supports:
+ *      - TCA95xx_8bit
+ *      - TCA95xx_16bit
+ *      - HT8574
+ *      - CH422G
+ */
+#define EXAMPLE_CHIP_NAME       TCA95xx_8bit
 #define EXAMPLE_I2C_NUM         (0)
 #define EXAMPLE_I2C_SDA_PIN     (8)
 #define EXAMPLE_I2C_SCL_PIN     (18)
 
-/**
- * Create an ESP_IOExpander object, Currently supports:
- *      - TCA95xx (8bit)
- *      - TCA95xx (16bit)
- *      - HT8574
- */
-ESP_IOExpander *expander = new ESP_IOExpander_TCA95xx_8bit(EXAMPLE_I2C_NUM, ESP_IO_EXPANDER_I2C_TCA9554_ADDRESS_000, EXAMPLE_I2C_SCL_PIN, EXAMPLE_I2C_SDA_PIN);
+#define _EXAMPLE_CHIP_CLASS(name, ...)   ESP_IOExpander_##name(__VA_ARGS__)
+#define EXAMPLE_CHIP_CLASS(name, ...)    _EXAMPLE_CHIP_CLASS(name, ##__VA_ARGS__)
+
+ESP_IOExpander *expander = NULL;
 
 void setup()
 {
     Serial.begin(115200);
     Serial.println("Test begin");
 
+    expander = new EXAMPLE_CHIP_CLASS(EXAMPLE_CHIP_NAME,
+                                    (i2c_port_t)EXAMPLE_I2C_NUM, ESP_IO_EXPANDER_I2C_TCA9554_ADDRESS_000,
+                                    EXAMPLE_I2C_SCL_PIN, EXAMPLE_I2C_SDA_PIN);
     expander->init();
     expander->begin();
 
@@ -68,5 +76,5 @@ void loop()
     Serial.print(", ");
     Serial.println(level[3]);
 
-    sleep(1);
+    delay(1000);
 }

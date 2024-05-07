@@ -20,12 +20,12 @@ ESP32_IO_Expander encapsulates various components from the [Espressif Components
 | [TCA95xx (8bit)](https://components.espressif.com/components/espressif/esp_io_expander_tca9554)        | 1.0.1       |
 | [TCA95xx (16bit)](https://components.espressif.com/components/espressif/esp_io_expander_tca95xx_16bit) | 1.0.0       |
 | [HT8574](https://components.espressif.com/components/espressif/esp_io_expander_ht8574)                 | 1.0.0       |
+| CH422G                                                                                                 | x           |
 
 ## Dependencies Version
 
 |                          **Name**                           | **Version** |
 | ----------------------------------------------------------- | ----------- |
-| ESP32_IO_Expander                                           | v0.x.x      |
 | [arduino-esp32](https://github.com/espressif/arduino-esp32) | >= v2.0.9   |
 
 ## How to Use
