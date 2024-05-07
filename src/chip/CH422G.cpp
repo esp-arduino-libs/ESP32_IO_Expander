@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2024 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -20,6 +20,10 @@
 #define I2C_TIMEOUT_MS          (10)
 
 #define IO_COUNT                (8)
+
+/* Register address */
+#define CH422G_REG_IN           (0x26)
+#define CH422G_REG_OUT          (0x38)
 
 /* Default register value on power-up */
 #define DIR_REG_DEFAULT_VAL     (0xff)
@@ -98,17 +102,16 @@ err:
     return ret;
 }
 
-#define CH422G_REG_IN 0x26
 static esp_err_t read_input_reg(esp_io_expander_handle_t handle, uint32_t *value)
 {
-    esp_io_expander_ch422g_t *ch422g = (esp_io_expander_ch422g_t *)__containerof(handle, esp_io_expander_ch422g_t, base);	
+    esp_io_expander_ch422g_t *ch422g = (esp_io_expander_ch422g_t *)__containerof(handle, esp_io_expander_ch422g_t, base);
 
     uint8_t temp = 0;
-	
-	ESP_RETURN_ON_ERROR(
+
+    ESP_RETURN_ON_ERROR(
         i2c_master_read_from_device(ch422g->i2c_num, ch422g->i2c_address, &temp, 1, pdMS_TO_TICKS(I2C_TIMEOUT_MS)),
         TAG, "Read input reg failed");
-	
+
     // *INDENT-OFF*
     ESP_RETURN_ON_ERROR(
         i2c_master_read_from_device(ch422g->i2c_num, CH422G_REG_IN, &temp, 1, pdMS_TO_TICKS(I2C_TIMEOUT_MS)),
@@ -118,17 +121,16 @@ static esp_err_t read_input_reg(esp_io_expander_handle_t handle, uint32_t *value
     return ESP_OK;
 }
 
-#define CH422G_REG_OUT 0x38
 static esp_err_t write_output_reg(esp_io_expander_handle_t handle, uint32_t value)
 {
     esp_io_expander_ch422g_t *ch422g = (esp_io_expander_ch422g_t *)__containerof(handle, esp_io_expander_ch422g_t, base);
     value &= 0xff;
 
-	uint8_t out_temp = 0x01;
-	ESP_RETURN_ON_ERROR(
+    uint8_t out_temp = 0x01;
+    ESP_RETURN_ON_ERROR(
         i2c_master_write_to_device(ch422g->i2c_num, ch422g->i2c_address, &out_temp, 1, pdMS_TO_TICKS(I2C_TIMEOUT_MS)),
         TAG, "Write output reg failed");
-		
+
     uint8_t data = (uint8_t)value;
     ESP_RETURN_ON_ERROR(
         i2c_master_write_to_device(ch422g->i2c_num, CH422G_REG_OUT, &data, 1, pdMS_TO_TICKS(I2C_TIMEOUT_MS)),
