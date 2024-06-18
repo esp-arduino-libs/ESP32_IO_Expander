@@ -5,60 +5,89 @@
  */
 
 #include <inttypes.h>
-
-#include "driver/i2c.h"
+#include "unity.h"
+#include "unity_test_runner.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_heap_caps.h"
 #include "esp_log.h"
-#include "unity.h"
-#include "unity_test_runner.h"
-
+#include "driver/i2c.h"
 #include "ESP_IOExpander_Library.h"
 
-// Refer to `esp32-hal-gpio.h`
-#define INPUT             0x01
-#define OUTPUT            0x03
-#define LOW               0x0
-#define HIGH              0x1
+static const char *TAG = "test_esp_io_expander";
 
-static const char *TAG = "ESP_IOxpander_test";
+/**
+ * Create an ESP_IOExpander object, Currently supports:
+ *      - TCA95xx_8bit
+ *      - TCA95xx_16bit
+ *      - HT8574
+ *      - CH422G
+ */
+#define TEST_CHIP_NAME      TCA95xx_8bit
+#define TEST_CHIP_ADDRESS   ESP_IO_EXPANDER_I2C_TCA9554_ADDRESS_000
+#define TEST_I2C_NUM        (0)
+#define TEST_I2C_SDA_PIN    (8)
+#define TEST_I2C_SCL_PIN    (18)
 
-#define I2C_HOST        (I2C_NUM_0)
-#define I2C_SDA_PIN     (8)
-#define I2C_SCL_PIN     (18)
+#define _TEST_CHIP_CLASS(name, ...)   ESP_IOExpander_##name(__VA_ARGS__)
+#define TEST_CHIP_CLASS(name, ...)    _TEST_CHIP_CLASS(name, ##__VA_ARGS__)
 
-TEST_CASE("test ESP IO expander for TCA9554", "[tca9554]")
+#define TEST_FUNCTIONS_TIME_S   (5)
+
+void test_i2c_init(void)
+{
+    const i2c_config_t i2c_config = EXPANDER_I2C_CONFIG_DEFAULT(TEST_I2C_SCL_PIN, TEST_I2C_SDA_PIN);
+    TEST_ESP_OK(i2c_param_config((i2c_port_t)TEST_I2C_NUM, &i2c_config));
+    TEST_ESP_OK(i2c_driver_install((i2c_port_t)TEST_I2C_NUM, i2c_config.mode, 0, 0, 0));
+}
+
+void test_i2c_deinit(void)
+{
+    TEST_ESP_OK(i2c_driver_delete((i2c_port_t)TEST_I2C_NUM));
+}
+
+void test_init_expander(ESP_IOExpander *expander, bool enable_external_i2c)
+{
+    if (enable_external_i2c) {
+        ESP_LOGI(TAG, "Initialize I2C bus");
+        test_i2c_init();
+    }
+
+    ESP_LOGI(TAG, "Test expander with external I2C");
+    expander->init();
+    expander->begin();
+    expander->reset();
+    expander->del();
+
+    ESP_LOGI(TAG, "Delete the expander object");
+    delete expander;
+
+    if (enable_external_i2c) {
+        ESP_LOGI(TAG, "Deinitialize I2C bus");
+        test_i2c_deinit();
+    }
+}
+
+TEST_CASE("test IO expander initialization", "[initialization]")
 {
     ESP_IOExpander *expander = NULL;
-    const i2c_config_t i2c_config = EXPANDER_I2C_CONFIG_DEFAULT(I2C_SCL_PIN, I2C_SDA_PIN);
 
     ESP_LOGI(TAG, "Test initialization with external I2C");
-    TEST_ASSERT_EQUAL(i2c_param_config(I2C_HOST, &i2c_config), ESP_OK);
-    TEST_ASSERT_EQUAL(i2c_driver_install(I2C_HOST, i2c_config.mode, 0, 0, 0), ESP_OK);
-    expander = new ESP_IOExpander_TCA95xx_8bit(I2C_HOST, ESP_IO_EXPANDER_I2C_TCA9554_ADDRESS_000);
+    expander = new TEST_CHIP_CLASS(TEST_CHIP_NAME, (i2c_port_t)TEST_I2C_NUM, TEST_CHIP_ADDRESS);
+    test_init_expander(expander, true);
+
+    ESP_LOGI(TAG, "Test initialization with internal I2C");
+    expander = new TEST_CHIP_CLASS(TEST_CHIP_NAME, (i2c_port_t)TEST_I2C_NUM, TEST_CHIP_ADDRESS, TEST_I2C_SCL_PIN, TEST_I2C_SDA_PIN);
+    test_init_expander(expander, false);
+}
+
+TEST_CASE("test IO expander operations", "[operations]")
+{
+    ESP_LOGI(TAG, "Create and initialize expander");
+    ESP_IOExpander *expander = new TEST_CHIP_CLASS(TEST_CHIP_NAME, (i2c_port_t)TEST_I2C_NUM, TEST_CHIP_ADDRESS, TEST_I2C_SCL_PIN, TEST_I2C_SDA_PIN);
     expander->init();
     expander->begin();
-    expander->reset();
-    expander->del();
-    delete expander;
-    i2c_driver_delete(I2C_HOST);
 
-    ESP_LOGI(TAG, "Test initialization with internal I2C (with config)");
-    expander = new ESP_IOExpander_TCA95xx_8bit(I2C_HOST, ESP_IO_EXPANDER_I2C_TCA9554_ADDRESS_000, &i2c_config);
-    expander->init();
-    expander->begin();
-    expander->reset();
-    expander->del();
-    delete expander;
-
-    ESP_LOGI(TAG, "Test initialization with internal I2C (without config)");
-    expander = new ESP_IOExpander_TCA95xx_8bit(I2C_HOST, ESP_IO_EXPANDER_I2C_TCA9554_ADDRESS_000, I2C_SCL_PIN, I2C_SDA_PIN);
-    expander->init();
-    expander->begin();
-    expander->reset();
-
-    ESP_LOGI(TAG, "Test input/output functions");
     ESP_LOGI(TAG, "Original status:");
     expander->printStatus();
 
@@ -86,13 +115,17 @@ TEST_CASE("test ESP IO expander for TCA9554", "[tca9554]")
     int level[4] = {0, 0, 0, 0};
     uint32_t level_temp;
 
-    // Read pin 0-3 level
-    level[0] = expander->digitalRead(0);
-    level[1] = expander->digitalRead(1);
-    level_temp = expander->multiDigitalRead(IO_EXPANDER_PIN_NUM_2 | IO_EXPANDER_PIN_NUM_3);
-    level[2] = level_temp & IO_EXPANDER_PIN_NUM_2 ? HIGH : LOW;
-    level[3] = level_temp & IO_EXPANDER_PIN_NUM_3 ? HIGH : LOW;
-    ESP_LOGI(TAG, "Pin 0-3 level: %d %d %d %d", level[0], level[1], level[2], level[3]);
+    for (int i = 0; i < TEST_FUNCTIONS_TIME_S; i++) {
+        // Read pin 0-3 level
+        level[0] = expander->digitalRead(0);
+        level[1] = expander->digitalRead(1);
+        level_temp = expander->multiDigitalRead(IO_EXPANDER_PIN_NUM_2 | IO_EXPANDER_PIN_NUM_3);
+        level[2] = level_temp & IO_EXPANDER_PIN_NUM_2 ? HIGH : LOW;
+        level[3] = level_temp & IO_EXPANDER_PIN_NUM_3 ? HIGH : LOW;
+        ESP_LOGI(TAG, "Pin 0-3 level: %d %d %d %d", level[0], level[1], level[2], level[3]);
+
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
 
     delete expander;
 }

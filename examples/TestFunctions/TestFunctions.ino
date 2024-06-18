@@ -9,6 +9,7 @@
  *      - CH422G
  */
 #define EXAMPLE_CHIP_NAME       TCA95xx_8bit
+#define EXAMPLE_CHIP_ADDR       ESP_IO_EXPANDER_I2C_TCA9554_ADDRESS_000
 #define EXAMPLE_I2C_NUM         (0)
 #define EXAMPLE_I2C_SDA_PIN     (8)
 #define EXAMPLE_I2C_SCL_PIN     (18)
@@ -23,9 +24,8 @@ void setup()
     Serial.begin(115200);
     Serial.println("Test begin");
 
-    expander = new EXAMPLE_CHIP_CLASS(EXAMPLE_CHIP_NAME,
-                                    (i2c_port_t)EXAMPLE_I2C_NUM, ESP_IO_EXPANDER_I2C_TCA9554_ADDRESS_000,
-                                    EXAMPLE_I2C_SCL_PIN, EXAMPLE_I2C_SDA_PIN);
+    expander = new EXAMPLE_CHIP_CLASS(EXAMPLE_CHIP_NAME, (i2c_port_t)EXAMPLE_I2C_NUM, EXAMPLE_CHIP_ADDR,
+                                      EXAMPLE_I2C_SCL_PIN, EXAMPLE_I2C_SDA_PIN);
     expander->init();
     expander->begin();
 
@@ -66,15 +66,7 @@ void loop()
     level_temp = expander->multiDigitalRead(IO_EXPANDER_PIN_NUM_2 | IO_EXPANDER_PIN_NUM_3);
     level[2] = level_temp & IO_EXPANDER_PIN_NUM_2 ? HIGH : LOW;
     level[3] = level_temp & IO_EXPANDER_PIN_NUM_3 ? HIGH : LOW;
-
-    Serial.print("Pin level: ");
-    Serial.print(level[0]);
-    Serial.print(", ");
-    Serial.print(level[1]);
-    Serial.print(", ");
-    Serial.print(level[2]);
-    Serial.print(", ");
-    Serial.println(level[3]);
+    Serial.printf("Pin 0-3 level: %d, %d, %d, %d", level[0], level[1], level[2], level[3]);
 
     delay(1000);
 }
