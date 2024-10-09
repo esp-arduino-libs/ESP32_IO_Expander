@@ -1,5 +1,11 @@
 # ChangeLog
 
+## v0.0.4 - 2024-10-09
+
+### Enhancements:
+
+* feat(ch422g): support OCx output
+
 ## v0.0.3 - 2024-05-07
 
 ### Enhancements:
