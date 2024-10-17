@@ -29,19 +29,25 @@
 
 /* Default register value when reset */
 // *INDENT-OFF*
-#define REG_WR_SET_DEFAULT_VAL  (0x01UL)    // Bit:     |    7    | 6 | 5 |    4    | 3 |     2    | 1 |    0    |
-                                            //          |---------|---|---|---------|---|----------|---|---------|
-                                            // Value:   | [SLEEP] | 0 | 0 | [OD_EN] | 0 | [A_SCAN] | 0 | [IO_OE] |
-                                            //          |---------|---|---|---------|---|----------|---|---------|
-                                            // Default: |    0    | 0 | 0 |    0    | 0 |    0     | 0 |    1    |
+// #define REG_WR_SET_DEFAULT_VAL  (0x01UL)    // Bit:     |    7    | 6 | 5 |    4    | 3 |     2    | 1 |    0    |
+//                                             //          |---------|---|---|---------|---|----------|---|---------|
+//                                             // Value:   | [SLEEP] | 0 | 0 | [OD_EN] | 0 | [A_SCAN] | 0 | [IO_OE] |
+//                                             //          |---------|---|---|---------|---|----------|---|---------|
+//                                             // Default: |    0    | 0 | 0 |    0    | 0 |    0     | 0 |    1    |
+#define REG_WR_SET_DEFAULT_VAL  (0x01UL)    // Bit:        |  7  |  6  |  5  |  4  |    3    |    2    |    1     |    0    |
+                                            //             | --- | --- | --- | --- | ------- | ------- | -------- | ------- |
+                                            // Value:      |  /  |  /  |  /  |  /  | [SLEEP] | [OD_EN] | [A_SCAN] | [IO_OE] |
+                                            //             | --- | --- | --- | --- | ------- | ------- | -------- | ------- |
+                                            // Default:    |  0  |  0  |  0  | 0   |    0    |    0    |    0     |    1    |
+
 // *INDENT-OFF*
 #define REG_WR_OC_DEFAULT_VAL   (0x0FUL)
 #define REG_WR_IO_DEFAULT_VAL   (0xFFUL)
 #define REG_OUT_DEFAULT_VAL     ((REG_WR_OC_DEFAULT_VAL << 8) | REG_WR_IO_DEFAULT_VAL)
-#define REG_DIR_DEFAULT_VAL     (0xFFUL)
+#define REG_DIR_DEFAULT_VAL     (0xFFFUL)
 
 #define REG_WR_SET_BIT_IO_OE    (1 << 0)
-#define REG_WR_SET_BIT_OD_EN    (1 << 4)
+#define REG_WR_SET_BIT_OD_EN    (1 << 2)
 
 /**
  * @brief Device Structure Type
@@ -117,7 +123,6 @@ static esp_err_t esp_io_expander_new_i2c_ch422g(i2c_port_t i2c_num, uint32_t i2c
     ESP_RETURN_ON_FALSE(ch422g, ESP_ERR_NO_MEM, TAG, "Malloc failed");
 
     ch422g->base.config.io_count = IO_COUNT;
-    ch422g->base.config.flags.dir_out_bit_zero = 1;
     ch422g->i2c_num = i2c_num;
     ch422g->i2c_address = i2c_address;
     ch422g->regs.wr_set = REG_WR_SET_DEFAULT_VAL;
@@ -199,7 +204,7 @@ static esp_err_t write_direction_reg(esp_io_expander_handle_t handle, uint32_t v
     uint8_t data = ch422g->regs.wr_set;
 
     value &= 0xFF;
-    if (value > 0) {
+    if (value != 0) {
         data |= REG_WR_SET_BIT_IO_OE;
     } else {
         data &= ~REG_WR_SET_BIT_IO_OE;
