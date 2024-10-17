@@ -79,6 +79,12 @@ public:
      *
      */
     void enableOC_PushPull(void);
+
+    /**
+     * @brief Enable IO0-7 input mode
+     *
+     */
+    void enableAllIO_Input(void);
 };
 
 /**

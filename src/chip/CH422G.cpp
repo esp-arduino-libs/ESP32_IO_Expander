@@ -114,6 +114,18 @@ void ESP_IOExpander_CH422G::enableOC_PushPull(void)
     ch422g->regs.wr_set = data;
 }
 
+void ESP_IOExpander_CH422G::enableAllIO_Input(void)
+{
+    esp_io_expander_ch422g_t *ch422g = (esp_io_expander_ch422g_t *)__containerof(handle, esp_io_expander_ch422g_t, base);
+    uint8_t data = (uint8_t)(ch422g->regs.wr_set & ~REG_WR_SET_BIT_IO_OE);
+
+    // WR-SET
+    CHECK_ERROR_RETURN(
+        i2c_master_write_to_device(ch422g->i2c_num, CH422G_REG_WR_SET, &data, sizeof(data), pdMS_TO_TICKS(I2C_TIMEOUT_MS))
+    );
+    ch422g->regs.wr_set = data;
+}
+
 static esp_err_t esp_io_expander_new_i2c_ch422g(i2c_port_t i2c_num, uint32_t i2c_address, esp_io_expander_handle_t *handle)
 {
     ESP_RETURN_ON_FALSE(i2c_num < I2C_NUM_MAX, ESP_ERR_INVALID_ARG, TAG, "Invalid i2c num");
