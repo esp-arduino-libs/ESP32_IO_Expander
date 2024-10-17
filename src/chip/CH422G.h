@@ -85,6 +85,12 @@ public:
      *
      */
     void enableAllIO_Input(void);
+
+    /**
+     * @brief Enable IO0-7 output mode
+     *
+     */
+    void enableAllIO_Output(void);
 };
 
 /**
