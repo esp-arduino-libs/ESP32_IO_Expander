@@ -124,6 +124,8 @@ void ESP_IOExpander_CH422G::enableAllIO_Input(void)
         i2c_master_write_to_device(ch422g->i2c_num, CH422G_REG_WR_SET, &data, sizeof(data), pdMS_TO_TICKS(I2C_TIMEOUT_MS))
     );
     ch422g->regs.wr_set = data;
+    // Delay 1ms to wait for the IO expander to switch to input mode
+    vTaskDelay(pdMS_TO_TICKS(2));
 }
 
 void ESP_IOExpander_CH422G::enableAllIO_Output(void)
