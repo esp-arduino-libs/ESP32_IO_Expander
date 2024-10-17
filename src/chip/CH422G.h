@@ -65,6 +65,8 @@ public:
     /**
      * @brief Begin IO expander
      *
+     * @note  The driver initialization by default sets CH422G's IO0-7 to output high-level mode.
+     *
      */
     void begin(void) override;
 
@@ -82,6 +84,10 @@ public:
 
     /**
      * @brief Enable IO0-7 input mode
+     *
+     * @note  The driver initialization by default sets CH422G's IO0-7 to output high-level mode.
+     * @note  Since the input/output mode of CH422G's IO0-7 must remain consistent, the driver will only set IO0-7 to
+     *        input mode when it determines that all pins are configured as input.
      *
      */
     void enableAllIO_Input(void);
