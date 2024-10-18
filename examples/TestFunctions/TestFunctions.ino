@@ -4,6 +4,8 @@
 #define EXAMPLE_I2C_NUM         (0)
 #define EXAMPLE_I2C_SDA_PIN     (8)
 #define EXAMPLE_I2C_SCL_PIN     (18)
+#define EXAMPLE_I2C_ADDR        (ESP_IO_EXPANDER_I2C_TCA9554_ADDRESS_000)   // Modify this value according to the
+                                                                            // hardware address
 
 /**
  * Create an ESP_IOExpander object, Currently supports:
@@ -18,8 +20,17 @@ void setup()
     Serial.begin(115200);
     Serial.println("Test begin");
 
+<<<<<<< HEAD
+=======
+    expander = new EXAMPLE_CHIP_CLASS(EXAMPLE_CHIP_NAME, (i2c_port_t)EXAMPLE_I2C_NUM, EXAMPLE_I2C_ADDR,
+                                      EXAMPLE_I2C_SCL_PIN, EXAMPLE_I2C_SDA_PIN);
+>>>>>>> a426a76 (Add examples for CH422G)
     expander->init();
     expander->begin();
+
+    /* For CH422G */
+    // static_cast<ESP_IOExpander_CH422G *>(expander)->enableOC_PushPull();
+    // static_cast<ESP_IOExpander_CH422G *>(expander)->enableOC_OpenDrain();
 
     Serial.println("Original status:");
     expander->printStatus();
