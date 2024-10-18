@@ -1,5 +1,11 @@
 # ChangeLog
 
+## v0.0.4 - 2024-10-18
+
+### Enhancements:
+
+* Update CH422G and add a new example to show how to use it (@H-sw123)
+
 ## v0.0.3 - 2024-05-07
 
 ### Enhancements:
