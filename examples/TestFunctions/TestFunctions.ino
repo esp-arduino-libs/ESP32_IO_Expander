@@ -12,6 +12,8 @@
 #define EXAMPLE_I2C_NUM         (0)
 #define EXAMPLE_I2C_SDA_PIN     (8)
 #define EXAMPLE_I2C_SCL_PIN     (18)
+#define EXAMPLE_I2C_ADDR        (ESP_IO_EXPANDER_I2C_TCA9554_ADDRESS_000)   // Modify this value according to the
+                                                                            // hardware address
 
 #define _EXAMPLE_CHIP_CLASS(name, ...)   ESP_IOExpander_##name(__VA_ARGS__)
 #define EXAMPLE_CHIP_CLASS(name, ...)    _EXAMPLE_CHIP_CLASS(name, ##__VA_ARGS__)
@@ -28,6 +30,12 @@ void setup()
                                     EXAMPLE_I2C_SCL_PIN, EXAMPLE_I2C_SDA_PIN);
     expander->init();
     expander->begin();
+
+    /* For CH422G */
+    // static_cast<ESP_IOExpander_CH422G *>(expander)->enableOC_PushPull();
+    // static_cast<ESP_IOExpander_CH422G *>(expander)->enableOC_OpenDrain();
+    // static_cast<ESP_IOExpander_CH422G *>(expander)->enableAllIO_Input();
+    // static_cast<ESP_IOExpander_CH422G *>(expander)->enableAllIO_Output();
 
     Serial.println("Original status:");
     expander->printStatus();

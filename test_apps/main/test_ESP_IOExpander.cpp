@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2023-2024 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -16,19 +16,17 @@
 
 #include "ESP_IOExpander_Library.h"
 
-// Refer to `esp32-hal-gpio.h`
-#define INPUT             0x01
-#define OUTPUT            0x03
-#define LOW               0x0
-#define HIGH              0x1
-
 static const char *TAG = "ESP_IOxpander_test";
 
+#define CHIP_NAME       TCA95xx_8bit
 #define I2C_HOST        (I2C_NUM_0)
 #define I2C_SDA_PIN     (8)
 #define I2C_SCL_PIN     (18)
 
-TEST_CASE("test ESP IO expander for TCA9554", "[tca9554]")
+#define _EXAMPLE_CHIP_CLASS(name, ...)   ESP_IOExpander_##name(__VA_ARGS__)
+#define EXAMPLE_CHIP_CLASS(name, ...)    _EXAMPLE_CHIP_CLASS(name, ##__VA_ARGS__)
+
+TEST_CASE("test ESP IO expander functions", "[io_expander]")
 {
     ESP_IOExpander *expander = NULL;
     const i2c_config_t i2c_config = EXPANDER_I2C_CONFIG_DEFAULT(I2C_SCL_PIN, I2C_SDA_PIN);
@@ -36,7 +34,7 @@ TEST_CASE("test ESP IO expander for TCA9554", "[tca9554]")
     ESP_LOGI(TAG, "Test initialization with external I2C");
     TEST_ASSERT_EQUAL(i2c_param_config(I2C_HOST, &i2c_config), ESP_OK);
     TEST_ASSERT_EQUAL(i2c_driver_install(I2C_HOST, i2c_config.mode, 0, 0, 0), ESP_OK);
-    expander = new ESP_IOExpander_TCA95xx_8bit(I2C_HOST, ESP_IO_EXPANDER_I2C_TCA9554_ADDRESS_000);
+    expander = new EXAMPLE_CHIP_CLASS(CHIP_NAME, I2C_HOST, ESP_IO_EXPANDER_I2C_TCA9554_ADDRESS_000);
     expander->init();
     expander->begin();
     expander->reset();
@@ -45,7 +43,7 @@ TEST_CASE("test ESP IO expander for TCA9554", "[tca9554]")
     i2c_driver_delete(I2C_HOST);
 
     ESP_LOGI(TAG, "Test initialization with internal I2C (with config)");
-    expander = new ESP_IOExpander_TCA95xx_8bit(I2C_HOST, ESP_IO_EXPANDER_I2C_TCA9554_ADDRESS_000, &i2c_config);
+    expander = new EXAMPLE_CHIP_CLASS(CHIP_NAME, I2C_HOST, ESP_IO_EXPANDER_I2C_TCA9554_ADDRESS_000, &i2c_config);
     expander->init();
     expander->begin();
     expander->reset();
@@ -53,7 +51,7 @@ TEST_CASE("test ESP IO expander for TCA9554", "[tca9554]")
     delete expander;
 
     ESP_LOGI(TAG, "Test initialization with internal I2C (without config)");
-    expander = new ESP_IOExpander_TCA95xx_8bit(I2C_HOST, ESP_IO_EXPANDER_I2C_TCA9554_ADDRESS_000, I2C_SCL_PIN, I2C_SDA_PIN);
+    expander = new EXAMPLE_CHIP_CLASS(CHIP_NAME, I2C_HOST, ESP_IO_EXPANDER_I2C_TCA9554_ADDRESS_000, I2C_SCL_PIN, I2C_SDA_PIN);
     expander->init();
     expander->begin();
     expander->reset();

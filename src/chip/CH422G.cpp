@@ -19,15 +19,30 @@
 /* Timeout of each I2C communication */
 #define I2C_TIMEOUT_MS          (10)
 
-#define IO_COUNT                (8)
+#define IO_COUNT                (12)
 
 /* Register address */
-#define CH422G_REG_IN           (0x26)
-#define CH422G_REG_OUT          (0x38)
+#define CH422G_REG_WR_SET       (0x48 >> 1)
+#define CH422G_REG_WR_OC        (0x46 >> 1)
+#define CH422G_REG_WR_IO        (0x70 >> 1)
+#define CH422G_REG_RD_IO        (0x4D >> 1)
 
-/* Default register value on power-up */
-#define DIR_REG_DEFAULT_VAL     (0xff)
-#define OUT_REG_DEFAULT_VAL     (0xdf)
+/* Default register value when reset */
+// *INDENT-OFF*
+#define REG_WR_SET_DEFAULT_VAL  (0x01UL)    // Bit:        |  7  |  6  |  5  |  4  |    3    |    2    |    1     |    0    |
+                                            //             | --- | --- | --- | --- | ------- | ------- | -------- | ------- |
+                                            // Value:      |  /  |  /  |  /  |  /  | [SLEEP] | [OD_EN] | [A_SCAN] | [IO_OE] |
+                                            //             | --- | --- | --- | --- | ------- | ------- | -------- | ------- |
+                                            // Default:    |  0  |  0  |  0  | 0   |    0    |    0    |    0     |    1    |
+
+// *INDENT-OFF*
+#define REG_WR_OC_DEFAULT_VAL   (0x0FUL)
+#define REG_WR_IO_DEFAULT_VAL   (0xFFUL)
+#define REG_OUT_DEFAULT_VAL     ((REG_WR_OC_DEFAULT_VAL << 8) | REG_WR_IO_DEFAULT_VAL)
+#define REG_DIR_DEFAULT_VAL     (0xFFFUL)
+
+#define REG_WR_SET_BIT_IO_OE    (1 << 0)
+#define REG_WR_SET_BIT_OD_EN    (1 << 2)
 
 /**
  * @brief Device Structure Type
@@ -38,14 +53,22 @@ typedef struct {
     i2c_port_t i2c_num;
     uint32_t i2c_address;
     struct {
-        uint8_t direction;
-        uint8_t output;
+        uint8_t wr_set;
+        uint8_t wr_oc;
+        uint8_t wr_io;
     } regs;
 } esp_io_expander_ch422g_t;
 
 static const char *TAG = "ch422g";
 
 static esp_err_t esp_io_expander_new_i2c_ch422g(i2c_port_t i2c_num, uint32_t i2c_address, esp_io_expander_handle_t *handle);
+static esp_err_t read_input_reg(esp_io_expander_handle_t handle, uint32_t *value);
+static esp_err_t write_output_reg(esp_io_expander_handle_t handle, uint32_t value);
+static esp_err_t read_output_reg(esp_io_expander_handle_t handle, uint32_t *value);
+static esp_err_t write_direction_reg(esp_io_expander_handle_t handle, uint32_t value);
+static esp_err_t read_direction_reg(esp_io_expander_handle_t handle, uint32_t *value);
+static esp_err_t reset(esp_io_expander_t *handle);
+static esp_err_t del(esp_io_expander_t *handle);
 
 ESP_IOExpander_CH422G::~ESP_IOExpander_CH422G()
 {
@@ -62,13 +85,55 @@ void ESP_IOExpander_CH422G::begin(void)
     CHECK_ERROR_RETURN(esp_io_expander_new_i2c_ch422g(i2c_id, i2c_address, &handle));
 }
 
-static esp_err_t read_input_reg(esp_io_expander_handle_t handle, uint32_t *value);
-static esp_err_t write_output_reg(esp_io_expander_handle_t handle, uint32_t value);
-static esp_err_t read_output_reg(esp_io_expander_handle_t handle, uint32_t *value);
-static esp_err_t write_direction_reg(esp_io_expander_handle_t handle, uint32_t value);
-static esp_err_t read_direction_reg(esp_io_expander_handle_t handle, uint32_t *value);
-static esp_err_t reset(esp_io_expander_t *handle);
-static esp_err_t del(esp_io_expander_t *handle);
+void ESP_IOExpander_CH422G::enableOC_OpenDrain(void)
+{
+    esp_io_expander_ch422g_t *ch422g = (esp_io_expander_ch422g_t *)__containerof(handle, esp_io_expander_ch422g_t, base);
+    uint8_t data = (uint8_t)(ch422g->regs.wr_set | REG_WR_SET_BIT_OD_EN);
+
+    // WR-SET
+    CHECK_ERROR_RETURN(
+        i2c_master_write_to_device(ch422g->i2c_num, CH422G_REG_WR_SET, &data, sizeof(data), pdMS_TO_TICKS(I2C_TIMEOUT_MS))
+    );
+    ch422g->regs.wr_set = data;
+}
+
+void ESP_IOExpander_CH422G::enableOC_PushPull(void)
+{
+    esp_io_expander_ch422g_t *ch422g = (esp_io_expander_ch422g_t *)__containerof(handle, esp_io_expander_ch422g_t, base);
+    uint8_t data = (uint8_t)(ch422g->regs.wr_set & ~REG_WR_SET_BIT_OD_EN);
+
+    // WR-SET
+    CHECK_ERROR_RETURN(
+        i2c_master_write_to_device(ch422g->i2c_num, CH422G_REG_WR_SET, &data, sizeof(data), pdMS_TO_TICKS(I2C_TIMEOUT_MS))
+    );
+    ch422g->regs.wr_set = data;
+}
+
+void ESP_IOExpander_CH422G::enableAllIO_Input(void)
+{
+    esp_io_expander_ch422g_t *ch422g = (esp_io_expander_ch422g_t *)__containerof(handle, esp_io_expander_ch422g_t, base);
+    uint8_t data = (uint8_t)(ch422g->regs.wr_set & ~REG_WR_SET_BIT_IO_OE);
+
+    // WR-SET
+    CHECK_ERROR_RETURN(
+        i2c_master_write_to_device(ch422g->i2c_num, CH422G_REG_WR_SET, &data, sizeof(data), pdMS_TO_TICKS(I2C_TIMEOUT_MS))
+    );
+    ch422g->regs.wr_set = data;
+    // Delay 1ms to wait for the IO expander to switch to input mode
+    vTaskDelay(pdMS_TO_TICKS(2));
+}
+
+void ESP_IOExpander_CH422G::enableAllIO_Output(void)
+{
+    esp_io_expander_ch422g_t *ch422g = (esp_io_expander_ch422g_t *)__containerof(handle, esp_io_expander_ch422g_t, base);
+    uint8_t data = (uint8_t)(ch422g->regs.wr_set | REG_WR_SET_BIT_IO_OE);
+
+    // WR-SET
+    CHECK_ERROR_RETURN(
+        i2c_master_write_to_device(ch422g->i2c_num, CH422G_REG_WR_SET, &data, sizeof(data), pdMS_TO_TICKS(I2C_TIMEOUT_MS))
+    );
+    ch422g->regs.wr_set = data;
+}
 
 static esp_err_t esp_io_expander_new_i2c_ch422g(i2c_port_t i2c_num, uint32_t i2c_address, esp_io_expander_handle_t *handle)
 {
@@ -79,10 +144,11 @@ static esp_err_t esp_io_expander_new_i2c_ch422g(i2c_port_t i2c_num, uint32_t i2c
     ESP_RETURN_ON_FALSE(ch422g, ESP_ERR_NO_MEM, TAG, "Malloc failed");
 
     ch422g->base.config.io_count = IO_COUNT;
-    ch422g->base.config.flags.dir_out_bit_zero = 1;
     ch422g->i2c_num = i2c_num;
     ch422g->i2c_address = i2c_address;
-    ch422g->regs.output = OUT_REG_DEFAULT_VAL;
+    ch422g->regs.wr_set = REG_WR_SET_DEFAULT_VAL;
+    ch422g->regs.wr_oc = REG_WR_OC_DEFAULT_VAL;
+    ch422g->regs.wr_io = REG_WR_IO_DEFAULT_VAL;
     ch422g->base.read_input_reg = read_input_reg;
     ch422g->base.write_output_reg = write_output_reg;
     ch422g->base.read_output_reg = read_output_reg;
@@ -105,37 +171,42 @@ err:
 static esp_err_t read_input_reg(esp_io_expander_handle_t handle, uint32_t *value)
 {
     esp_io_expander_ch422g_t *ch422g = (esp_io_expander_ch422g_t *)__containerof(handle, esp_io_expander_ch422g_t, base);
-
     uint8_t temp = 0;
 
     ESP_RETURN_ON_ERROR(
-        i2c_master_read_from_device(ch422g->i2c_num, ch422g->i2c_address, &temp, 1, pdMS_TO_TICKS(I2C_TIMEOUT_MS)),
-        TAG, "Read input reg failed");
-
-    // *INDENT-OFF*
-    ESP_RETURN_ON_ERROR(
-        i2c_master_read_from_device(ch422g->i2c_num, CH422G_REG_IN, &temp, 1, pdMS_TO_TICKS(I2C_TIMEOUT_MS)),
-        TAG, "Read input reg failed");
-    // *INDENT-ON*
+        i2c_master_read_from_device(ch422g->i2c_num, CH422G_REG_RD_IO, &temp, 1, pdMS_TO_TICKS(I2C_TIMEOUT_MS)),
+        TAG, "Read RD-IO reg failed"
+    );
     *value = temp;
+
     return ESP_OK;
 }
 
 static esp_err_t write_output_reg(esp_io_expander_handle_t handle, uint32_t value)
 {
     esp_io_expander_ch422g_t *ch422g = (esp_io_expander_ch422g_t *)__containerof(handle, esp_io_expander_ch422g_t, base);
-    value &= 0xff;
 
-    uint8_t out_temp = 0x01;
-    ESP_RETURN_ON_ERROR(
-        i2c_master_write_to_device(ch422g->i2c_num, ch422g->i2c_address, &out_temp, 1, pdMS_TO_TICKS(I2C_TIMEOUT_MS)),
-        TAG, "Write output reg failed");
+    uint8_t wr_oc_data = (value & 0xF00) >> 8;
+    uint8_t wr_io_data = value & 0xFF;
 
-    uint8_t data = (uint8_t)value;
-    ESP_RETURN_ON_ERROR(
-        i2c_master_write_to_device(ch422g->i2c_num, CH422G_REG_OUT, &data, 1, pdMS_TO_TICKS(I2C_TIMEOUT_MS)),
-        TAG, "Write output reg failed");
-    ch422g->regs.output = value;
+    // WR-OC
+    if (wr_oc_data) {
+        ESP_RETURN_ON_ERROR(
+            i2c_master_write_to_device(ch422g->i2c_num, CH422G_REG_WR_OC, &wr_oc_data, sizeof(wr_oc_data), pdMS_TO_TICKS(I2C_TIMEOUT_MS)),
+            TAG, "Write WR-OC reg failed"
+        );
+        ch422g->regs.wr_oc = wr_oc_data;
+    }
+
+    // WR-IO
+    if (wr_io_data) {
+        ESP_RETURN_ON_ERROR(
+            i2c_master_write_to_device(ch422g->i2c_num, CH422G_REG_WR_IO, &wr_io_data, sizeof(wr_io_data), pdMS_TO_TICKS(I2C_TIMEOUT_MS)),
+            TAG, "Write WR-IO reg failed"
+        );
+        ch422g->regs.wr_io = wr_io_data;
+    }
+
     return ESP_OK;
 }
 
@@ -143,29 +214,50 @@ static esp_err_t read_output_reg(esp_io_expander_handle_t handle, uint32_t *valu
 {
     esp_io_expander_ch422g_t *ch422g = (esp_io_expander_ch422g_t *)__containerof(handle, esp_io_expander_ch422g_t, base);
 
-    *value = ch422g->regs.output;
+    *value = ch422g->regs.wr_io | (((uint32_t)ch422g->regs.wr_oc) << 8);
+
     return ESP_OK;
 }
 
 static esp_err_t write_direction_reg(esp_io_expander_handle_t handle, uint32_t value)
 {
     esp_io_expander_ch422g_t *ch422g = (esp_io_expander_ch422g_t *)__containerof(handle, esp_io_expander_ch422g_t, base);
-    value &= 0xff;
-    ch422g->regs.direction = value;
+    uint8_t data = ch422g->regs.wr_set;
+
+    value &= 0xFF;
+    if (value != 0) {
+        data |= REG_WR_SET_BIT_IO_OE;
+    } else {
+        data &= ~REG_WR_SET_BIT_IO_OE;
+    }
+
+    // WR-SET
+    ESP_RETURN_ON_ERROR(
+        i2c_master_write_to_device(ch422g->i2c_num, CH422G_REG_WR_SET, &data, sizeof(data), pdMS_TO_TICKS(I2C_TIMEOUT_MS)),
+        TAG, "Write WR_SET reg failed"
+    );
+    ch422g->regs.wr_set = data;
+
     return ESP_OK;
 }
+
+#define DIR_OUT_VALUE           (0xFFF)
+#define DIR_IN_VALUE            (0xF00)
 
 static esp_err_t read_direction_reg(esp_io_expander_handle_t handle, uint32_t *value)
 {
     esp_io_expander_ch422g_t *ch422g = (esp_io_expander_ch422g_t *)__containerof(handle, esp_io_expander_ch422g_t, base);
 
-    *value = ch422g->regs.direction;
+    *value = (ch422g->regs.wr_set & REG_WR_SET_BIT_IO_OE) ? DIR_OUT_VALUE : DIR_IN_VALUE;
+
     return ESP_OK;
 }
 
 static esp_err_t reset(esp_io_expander_t *handle)
 {
-    ESP_RETURN_ON_ERROR(write_output_reg(handle, OUT_REG_DEFAULT_VAL), TAG, "Write output reg failed");
+    ESP_RETURN_ON_ERROR(write_direction_reg(handle, REG_DIR_DEFAULT_VAL), TAG, "Write direction reg (WR_SET) failed");
+    ESP_RETURN_ON_ERROR(write_output_reg(handle, REG_OUT_DEFAULT_VAL), TAG, "Write output reg (WR_OC & WR_IO) failed");
+
     return ESP_OK;
 }
 
