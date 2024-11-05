@@ -1,5 +1,11 @@
 # ChangeLog
 
+## v0.1.1 - 2024-11-05
+
+### Bug Fixes:
+
+* Fix README broken link
+
 ## v0.1.0 - 2024-11-05
 
 ### Enhancements:
