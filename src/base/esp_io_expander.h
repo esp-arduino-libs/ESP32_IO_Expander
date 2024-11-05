@@ -69,7 +69,7 @@ typedef enum {
  */
 typedef enum {
     IO_EXPANDER_INPUT,          /*!< Input direction */
-    IO_EXPANDER_OUTPUT,         /*!< Output dircetion */
+    IO_EXPANDER_OUTPUT,         /*!< Output direction */
 } esp_io_expander_dir_t;
 
 /**
@@ -134,7 +134,7 @@ struct esp_io_expander_s {
     /**
      * @brief Write value to direction register (mandatory)
      *
-     * @note The value represents the diection of IO
+     * @note The value represents the direction of IO
      * @note If there are multiple input registers in the device, their values should be spliced together in order to form the `value`.
      *
      * @param handle: IO Expander handle
@@ -215,7 +215,7 @@ esp_err_t esp_io_expander_set_dir(esp_io_expander_handle_t handle, uint32_t pin_
 esp_err_t esp_io_expander_set_level(esp_io_expander_handle_t handle, uint32_t pin_num_mask, uint8_t level);
 
 /**
- * @brief Get the intput level of a set of target IOs
+ * @brief Get the input level of a set of target IOs
  *
  * @note This function can be called whenever target IOs are in input mode or output mode
  *

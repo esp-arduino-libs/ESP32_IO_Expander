@@ -1,5 +1,12 @@
 # ChangeLog
 
+## v0.1.0 - 2024-11-05
+
+### Enhancements:
+
+* Upload to the ESP Registry and support to build on the esp-idf
+* Update pre-commit configuration
+
 ## v0.0.4 - 2024-10-18
 
 ### Enhancements:

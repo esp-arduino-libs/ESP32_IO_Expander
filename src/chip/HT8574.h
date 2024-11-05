@@ -76,7 +76,7 @@ public:
  *  |  0  |  1  |  1  |  1  | A2  | A1  | A0  | R/W |
  *  └─────┘─────┘─────┘─────┘─────┘─────┘─────┘─────┘
  *     └────────┯────────┘     └─────┯──────┘
- *           (Fixed)        (Hareware Selectable)
+ *           (Fixed)        (Hardware Selectable)
  *
  * And the 7-bit slave address is the most important data for users.
  * For example, if a chip's A0,A1,A2 are connected to GND, it's 7-bit slave address is 0111000b(0x38).
