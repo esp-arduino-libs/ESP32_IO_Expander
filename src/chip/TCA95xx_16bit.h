@@ -76,7 +76,7 @@ public:
  *  |  1  |  1  |  1  |  0  |  1  | A1  | A0  | R/W |
  *  └─────┘─────┘─────┘─────┘─────┘─────┘─────┘─────┘
  *     └────────┯──────────────┘     └──┯──┘
- *           (Fixed)        (Hareware Selectable)
+ *           (Fixed)        (Hardware Selectable)
  *
  * The 8-bit address format for the TCA9555 is as follows:
  *
@@ -86,7 +86,7 @@ public:
  *  |  0  |  1  |  0  |  0  | A2  | A1  | A0  | R/W |
  *  └─────┘─────┘─────┘─────┘─────┘─────┘─────┘─────┘
  *     └────────┯────────┘     └─────┯──────┘
- *           (Fixed)        (Hareware Selectable)
+ *           (Fixed)        (Hardware Selectable)
  *
  * And the 7-bit slave address is the most important data for users.
  * For example, if a TCA9555 chip's A0,A1,A2 are connected to GND, it's 7-bit slave address is 0b0100000.

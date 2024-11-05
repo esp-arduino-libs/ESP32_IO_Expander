@@ -1,16 +1,21 @@
 [![Arduino Lint](https://github.com/esp-arduino-libs/ESP32_IO_Expander/actions/workflows/arduino_lint.yml/badge.svg)](https://github.com/esp-arduino-libs/ESP32_IO_Expander/actions/workflows/arduino_lint.yml) [![pre-commit](https://github.com/esp-arduino-libs/ESP32_IO_Expander/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/esp-arduino-libs/ESP32_IO_Expander/actions/workflows/pre-commit.yml) [![Build Test Apps](https://github.com/esp-arduino-libs/ESP32_IO_Expander/actions/workflows/build_test.yml/badge.svg)](https://github.com/esp-arduino-libs/ESP32_IO_Expander/actions/workflows/build_test.yml)
 
+**Latest Arduino Library Version**: [![GitHub Release](https://img.shields.io/github/v/release/esp-arduino-libs/ESP32_IO_Expander)](https://github.com/esp-arduino-libs/ESP32_IO_Expander/releases)
+
+**Latest Espressif Component Version**: [![Espressif Release](https://components.espressif.com/components/espressif/ESP32_IO_Expander/badge.svg)](https://components.espressif.com/components/espressif/ESP32_IO_Expander)
+
 # ESP32_IO_Expander
 
-ESP32_IO_Expander is an Arduino library designed for driving [IO expander chips](#supported-drivers) using ESP32 SoCs.
+ESP32_IO_Expander is a library designed for driving [IO expander chips](#supported-drivers) using ESP32 SoCs.
 
-ESP32_IO_Expander encapsulates various components from the [Espressif Components Registry](https://components.espressif.com/). It is developed based on [arduino-esp32](https://github.com/espressif/arduino-esp32) and can be easily downloaded and integrated into the Arduino IDE.
+ESP32_IO_Expander encapsulates various components from the [Espressif Components Registry](https://components.espressif.com/). It is developed based on [arduino-esp32](https://github.com/espressif/arduino-esp32) or [esp-idf](https://github.com/espressif/esp-idf), and can be easily downloaded and integrated into the Arduino IDE.
 
 ## Features
 
 * Supports various IO expander chips.
 * Supports controlling individual IO pin (using pinMode(), digitalRead(), and digitalWrite() functions).
 * Supports controlling multiple IO pins simultaneously.
+* Supports building on the Arduino IDE and the ESP-IDF framework.
 
 ## Supported Drivers
 
@@ -24,9 +29,17 @@ ESP32_IO_Expander encapsulates various components from the [Espressif Components
 
 ## Dependencies Version
 
+### Arduino
+
 |                          **Name**                           | **Version** |
 | ----------------------------------------------------------- | ----------- |
-| [arduino-esp32](https://github.com/espressif/arduino-esp32) | >= v2.0.9   |
+| [arduino-esp32](https://github.com/espressif/arduino-esp32) | >= v3.0.0   |
+
+### ESP-IDF
+
+|                    **Name**                     | **Version** |
+| ----------------------------------------------- | ----------- |
+| [esp-idf](https://github.com/espressif/esp-idf) | >= v5.1     |
 
 ## How to Use
 
@@ -35,15 +48,18 @@ For information on how to use the library in the Arduino IDE, please refer to th
 ### Examples
 
 * [Test Functions](examples/TestFunctions): Demonstrates how to use ESP32_IO_Expander and test all functions.
+* [Test CH422G](examples/TestCH422G): Demonstrates how to use ESP32_IO_Expander with the CH422G chip.
 
 ### Detailed Usage
 
 ```cpp
 #include <ESP_IOExpander_Library.h>
 
-// Create an ESP_IOExpander object according to the chip type
+// Create and initialize an ESP_IOExpander object according to the chip type
 ESP_IOExpander *expander = new ESP_IOExpander_TCA95xx_8bit(EXAMPLE_I2C_NUM_0, ESP_IO_EXPANDER_I2C_TCA9554_ADDRESS_000,
                                                            EXAMPLE_I2C_SCL_PIN, EXAMPLE_I2C_SDA_PIN);
+expander->init();
+expander->begin();
 
 // Control a single pin (0-31)
 expander->pinMode(0, OUTPUT);
