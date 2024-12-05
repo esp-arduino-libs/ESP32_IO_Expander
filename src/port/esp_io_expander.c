@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2015-2022 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -9,13 +9,11 @@
 
 #include "esp_bit_defs.h"
 #include "esp_check.h"
-#ifdef LOG_LOCAL_LEVEL
-#undef LOG_LOCAL_LEVEL
-#endif
-#define LOG_LOCAL_LEVEL ESP_LOG_INFO
 #include "esp_log.h"
 
 #include "esp_io_expander.h"
+
+#include "esp_expander_utils.h"
 
 #define VALID_IO_COUNT(handle)      ((handle)->config.io_count <= IO_COUNT_MAX ? (handle)->config.io_count : IO_COUNT_MAX)
 
@@ -29,7 +27,7 @@ typedef enum {
     REG_DIRECTION,
 } reg_type_t;
 
-static const char *TAG = "io_expander";
+static char *TAG = "io_expander";
 
 static esp_err_t write_reg(esp_io_expander_handle_t handle, reg_type_t reg, uint32_t value);
 static esp_err_t read_reg(esp_io_expander_handle_t handle, reg_type_t reg, uint32_t *value);
@@ -133,8 +131,6 @@ esp_err_t esp_io_expander_get_level(esp_io_expander_handle_t handle, uint32_t pi
 esp_err_t esp_io_expander_print_state(esp_io_expander_handle_t handle)
 {
     ESP_RETURN_ON_FALSE(handle, ESP_ERR_INVALID_ARG, TAG, "Invalid handle");
-
-    esp_log_level_set(TAG, ESP_LOG_INFO);
 
     uint8_t io_count = VALID_IO_COUNT(handle);
     uint32_t input_reg, output_reg, dir_reg;

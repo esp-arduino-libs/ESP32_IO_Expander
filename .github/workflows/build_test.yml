@@ -15,7 +15,7 @@ jobs:
     container: espressif/idf:${{ matrix.idf_ver }}
     steps:
       - uses: actions/checkout@v3
-      - name: Build ESP_IOExpander Test Application
+      - name: Build Test Application
         env:
           IDF_TARGET: ${{ matrix.idf_target }}
         working-directory: test_apps

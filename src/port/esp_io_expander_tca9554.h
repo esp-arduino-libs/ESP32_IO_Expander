@@ -1,7 +1,12 @@
 /*
- * SPDX-FileCopyrightText: 2023 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2022 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
+ * @file
+ * @brief ESP IO expander: TCA9554
  */
 
 #pragma once
@@ -11,59 +16,29 @@
 #include "driver/i2c.h"
 #include "esp_err.h"
 
-#include "../ESP_IOExpander.h"
+#include "esp_io_expander.h"
 
-class ESP_IOExpander_TCA95xx_8bit: public ESP_IOExpander {
-public:
-    /**
-     * @brief Constructor to create ESP_IOExpander object
-     *
-     * @note  After using this function, call `init()` will initialize I2C bus.
-     *
-     * @param id I2C port number
-     * @param address I2C device address. Should be like `ESP_IO_EXPANDER_I2C_*`.
-     *                Can be found in the header file of each IO expander.h.
-     * @param config Pointer to I2C bus configuration
-     */
-    ESP_IOExpander_TCA95xx_8bit(i2c_port_t id, uint8_t address, const i2c_config_t *config): ESP_IOExpander(id, address, config) { };
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-    /**
-     * @brief Constructor to create ESP_IOExpander object
-     *
-     * @note  After using this function, call `init()` will initialize I2C bus.
-     *
-     * @param id I2C port number
-     * @param address I2C device address. Should be like `ESP_IO_EXPANDER_I2C_*`.
-     *                Can be found in the header file of each IO expander.h.
-     * @param scl SCL pin number
-     * @param sda SDA pin number
-     */
-    ESP_IOExpander_TCA95xx_8bit(i2c_port_t id, uint8_t address, int scl, int sda): ESP_IOExpander(id, address, scl, sda) { };
+#define ESP_IO_EXPANDER_TCA9554_VER_MAJOR    (1)
+#define ESP_IO_EXPANDER_TCA9554_VER_MINOR    (0)
+#define ESP_IO_EXPANDER_TCA9554_VER_PATCH    (1)
 
-    /**
-     * @brief Constructor to create ESP_IOExpander object
-     *
-     * @note  If use this function, should initialize I2C bus before call `init()`.
-     *
-     * @param id I2C port number
-     * @param address I2C device address. Should be like `ESP_IO_EXPANDER_I2C_*`.
-     *                Can be found in the header file of each IO expander.h.
-     */
-    ESP_IOExpander_TCA95xx_8bit(i2c_port_t id, uint8_t address): ESP_IOExpander(id, address) { };
-
-    /**
-     * @brief Destructor
-     *
-     * @note  This function will delete I2C driver if it is initialized by ESP_IOExpander and delete ESP_IOExpander object.
-     */
-    ~ESP_IOExpander_TCA95xx_8bit() override;
-
-    /**
-     * @brief Begin IO expander
-     *
-     */
-    void begin(void) override;
-};
+/**
+ * @brief Create a new TCA9554 IO expander driver
+ *
+ * @note The I2C communication should be initialized before use this function
+ *
+ * @param i2c_num: I2C port num
+ * @param i2c_address: I2C address of chip
+ * @param handle: IO expander handle
+ *
+ * @return
+ *      - ESP_OK: Success, otherwise returns ESP_ERR_xxx
+ */
+esp_err_t esp_io_expander_new_i2c_tca9554(i2c_port_t i2c_num, uint32_t i2c_address, esp_io_expander_handle_t *handle);
 
 /**
  * @brief I2C address of the TCA9554
@@ -117,3 +92,7 @@ public:
 #define ESP_IO_EXPANDER_I2C_TCA9554A_ADDRESS_101    (0x3D)
 #define ESP_IO_EXPANDER_I2C_TCA9554A_ADDRESS_110    (0x3E)
 #define ESP_IO_EXPANDER_I2C_TCA9554A_ADDRESS_111    (0x3F)
+
+#ifdef __cplusplus
+}
+#endif

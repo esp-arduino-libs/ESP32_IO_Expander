@@ -13,8 +13,10 @@
 #include "esp_check.h"
 #include "esp_log.h"
 
-#include "../private/CheckResult.h"
-#include "HT8574.h"
+#include "esp_io_expander.h"
+#include "esp_io_expander_ht8574.h"
+
+#include "esp_expander_utils.h"
 
 /* Timeout of each I2C communication */
 #define I2C_TIMEOUT_MS          (10)
@@ -39,24 +41,7 @@ typedef struct {
     } regs;
 } esp_io_expander_ht8574_t;
 
-static const char *TAG = "ht8574";
-
-static esp_err_t esp_io_expander_new_i2c_ht8574(i2c_port_t i2c_num, uint32_t i2c_address, esp_io_expander_handle_t *handle);
-
-ESP_IOExpander_HT8574::~ESP_IOExpander_HT8574()
-{
-    if (i2c_need_init) {
-        i2c_driver_delete(i2c_id);
-    }
-    if (handle) {
-        del();
-    }
-}
-
-void ESP_IOExpander_HT8574::begin(void)
-{
-    CHECK_ERROR_RETURN(esp_io_expander_new_i2c_ht8574(i2c_id, i2c_address, &handle));
-}
+static char *TAG = "ht8574";
 
 static esp_err_t read_input_reg(esp_io_expander_handle_t handle, uint32_t *value);
 static esp_err_t write_output_reg(esp_io_expander_handle_t handle, uint32_t value);
@@ -66,8 +51,10 @@ static esp_err_t read_direction_reg(esp_io_expander_handle_t handle, uint32_t *v
 static esp_err_t reset(esp_io_expander_t *handle);
 static esp_err_t del(esp_io_expander_t *handle);
 
-static esp_err_t esp_io_expander_new_i2c_ht8574(i2c_port_t i2c_num, uint32_t i2c_address, esp_io_expander_handle_t *handle)
+esp_err_t esp_io_expander_new_i2c_ht8574(i2c_port_t i2c_num, uint32_t i2c_address, esp_io_expander_handle_t *handle)
 {
+    ESP_LOGI(TAG, "version: %d.%d.%d", ESP_IO_EXPANDER_HT8574_VER_MAJOR, ESP_IO_EXPANDER_HT8574_VER_MINOR,
+             ESP_IO_EXPANDER_HT8574_VER_PATCH);
     ESP_RETURN_ON_FALSE(i2c_num < I2C_NUM_MAX, ESP_ERR_INVALID_ARG, TAG, "Invalid i2c num");
     ESP_RETURN_ON_FALSE(handle, ESP_ERR_INVALID_ARG, TAG, "Invalid handle");
 
@@ -78,7 +65,6 @@ static esp_err_t esp_io_expander_new_i2c_ht8574(i2c_port_t i2c_num, uint32_t i2c
     ht8574->base.config.flags.dir_out_bit_zero = 1;
     ht8574->i2c_num = i2c_num;
     ht8574->i2c_address = i2c_address;
-    ht8574->regs.output = OUT_REG_DEFAULT_VAL;
     ht8574->base.read_input_reg = read_input_reg;
     ht8574->base.write_output_reg = write_output_reg;
     ht8574->base.read_output_reg = read_output_reg;
