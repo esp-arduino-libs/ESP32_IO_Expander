@@ -1,5 +1,12 @@
 # ChangeLog
 
+## v1.0.0 - 2024-12-06
+
+### Enhancements:
+
+* feat(repo): refactor with esp-lib-utils
+* feat(repo): support micropython
+
 ## v0.1.0 - 2024-11-05
 
 ### Enhancements:
