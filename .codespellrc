@@ -1,2 +1,1 @@
 [codespell]
-skip = ./src/touch/base/esp_lcd_touch_xpt2046.c

@@ -1,5 +1,5 @@
 /**
- * | Supported IO Expanders | CH422G |
+ * | Supported IO Expanders    | CH422G |
  * | ------------------------- | ------ |
  *
  * # CH422G Test Example
@@ -38,25 +38,23 @@
  */
 
 #include <Arduino.h>
-#include <ESP_IOExpander_Library.h>
+#include <esp_io_expander.hpp>
 
-#define EXAMPLE_I2C_NUM     (0)
 #define EXAMPLE_I2C_SDA_PIN (8)
 #define EXAMPLE_I2C_SCL_PIN (9)
 #define EXAMPLE_I2C_ADDR    (ESP_IO_EXPANDER_I2C_CH422G_ADDRESS)
 
-ESP_IOExpander_CH422G *expander = NULL;
+esp_expander::CH422G *expander = NULL;
 
 void setup() {
   Serial.begin(115200);
   delay(1000);
   Serial.println("Test begin");
 
-  expander = new ESP_IOExpander_CH422G((i2c_port_t)EXAMPLE_I2C_NUM, EXAMPLE_I2C_ADDR, EXAMPLE_I2C_SCL_PIN, EXAMPLE_I2C_SDA_PIN);
+  expander = new esp_expander::CH422G(EXAMPLE_I2C_SCL_PIN, EXAMPLE_I2C_SDA_PIN, EXAMPLE_I2C_ADDR);
   expander->init();
   expander->begin();
 
-  /* For CH422G */
   Serial.println("Set the OC pin to push-pull output mode.");
   expander->enableOC_PushPull();
 
