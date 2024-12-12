@@ -1,5 +1,11 @@
 # ChangeLog
 
+## v1.0.1 - 2024-12-11
+
+### Bug Fixes:
+
+* fix(repo): compile *.cpp files on MicroPython
+
 ## v1.0.0 - 2024-12-06
 
 ### Enhancements:
