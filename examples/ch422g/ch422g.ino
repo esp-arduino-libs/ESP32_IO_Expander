@@ -34,7 +34,6 @@
   Since the input/output mode of CH422G's IO0-7 must remain consistent, the driver will only set IO0-7 to
   input mode when it determines that all pins are configured as input.
   Using pinMode and multiPinMode will be invalid. You can only set the pin working mode through enableAllIO_Input, enableAllIO_Output, enableOC_PushPull and enableOC_OpenDrain
- *
  */
 
 #include <Arduino.h>

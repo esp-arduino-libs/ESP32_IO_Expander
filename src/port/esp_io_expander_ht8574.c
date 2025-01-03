@@ -29,7 +29,6 @@
 
 /**
  * @brief Device Structure Type
- *
  */
 typedef struct {
     esp_io_expander_t base;

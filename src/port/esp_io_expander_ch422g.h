@@ -37,7 +37,6 @@ esp_err_t esp_io_expander_new_i2c_ch422g(i2c_port_t i2c_num, uint32_t i2c_addres
 
 /**
  * @brief I2C address of the ch422g. Just to keep the same with other IO expanders, but it is ignored.
- *
  */
 #define ESP_IO_EXPANDER_I2C_CH422G_ADDRESS    (0x24)
 

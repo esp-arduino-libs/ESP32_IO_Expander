@@ -19,7 +19,6 @@
 
 /**
  * @brief Register type
- *
  */
 typedef enum {
     REG_INPUT = 0,
