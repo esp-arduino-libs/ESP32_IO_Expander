@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023-2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2023-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -23,14 +23,21 @@ bool HT8574::begin(void)
 {
     ESP_UTILS_LOG_TRACE_ENTER_WITH_THIS();
 
-    ESP_UTILS_CHECK_FALSE_RETURN(checkIsInit(), false, "Not initialized");
-    ESP_UTILS_CHECK_FALSE_RETURN(!checkIsBegun(), false, "Already begun");
+    ESP_UTILS_CHECK_FALSE_RETURN(!isOverState(State::BEGIN), false, "Already begun");
+
+    // Initialize the device if not initialized
+    if (!isOverState(State::INIT)) {
+        ESP_UTILS_CHECK_FALSE_RETURN(init(), false, "Init failed");
+    }
 
     ESP_UTILS_CHECK_ERROR_RETURN(
-        esp_io_expander_new_i2c_ht8574(getHostID(), getDeviceAddress(), &device_handle), false,
-        "Create HT8574 IO expander failed"
+        esp_io_expander_new_i2c_ht8574(
+            static_cast<i2c_port_t>(getConfig().host_id), getConfig().device.address, &device_handle
+        ), false, "Create HT8574 failed"
     );
-    ESP_UTILS_LOGD("Create HT8574 IO expander(@%p)", device_handle);
+    ESP_UTILS_LOGD("Create HT8574 @%p", device_handle);
+
+    setState(State::BEGIN);
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
 

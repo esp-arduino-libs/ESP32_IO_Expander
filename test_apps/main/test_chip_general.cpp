@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023-2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2023-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -83,8 +83,9 @@ static void test_device(std::shared_ptr<Base> device)
         ESP_LOGI(TAG, "Test constructor with (const Config &config) (external I2C)"); \
         Base::Config external_i2c_config = { \
             .host_id = TEST_HOST_ID, \
-            .device_address = TEST_DEVICE_ADDRESS, \
-            .skip_init_host = true, \
+            .device = Base::DeviceConfig{ \
+                .address = TEST_DEVICE_ADDRESS, \
+            }, \
         }; \
         expander = CREATE_DEVICE(device_name, external_i2c_config); \
         test_device(expander); \
@@ -101,10 +102,13 @@ static void test_device(std::shared_ptr<Base> device)
         ESP_LOGI(TAG, "Test constructor with (const Config &config) (internal I2C)"); \
         Base::Config internal_i2c_config = { \
             .host_id = TEST_HOST_ID, \
-            .host_sda_io_num = TEST_HOST_I2C_SDA_PIN, \
-            .host_scl_io_num = TEST_HOST_I2C_SCL_PIN, \
-            .device_address = TEST_DEVICE_ADDRESS, \
-            .skip_init_host = false, \
+            .host = Base::HostPartialConfig{ \
+                .sda_io_num = TEST_HOST_I2C_SDA_PIN, \
+                .scl_io_num = TEST_HOST_I2C_SCL_PIN, \
+            }, \
+            .device = Base::DeviceConfig{ \
+                .address = TEST_DEVICE_ADDRESS, \
+            }, \
         }; \
         expander = CREATE_DEVICE(device_name, internal_i2c_config); \
         test_device(expander); \
@@ -164,7 +168,6 @@ static void test_device(std::shared_ptr<Base> device)
 
 /**
  * Here to create test cases for different devices
- *
  */
 CREATE_TEST_CASE(TCA95XX_8BIT)
 CREATE_TEST_CASE(TCA95XX_16BIT)

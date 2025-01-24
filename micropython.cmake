@@ -13,5 +13,11 @@ target_sources(usermod_esp_io_expander INTERFACE ${SRCS_C} ${SRCS_CXX})
 # Add the current directory as an include directory.
 target_include_directories(usermod_esp_io_expander INTERFACE ${SRC_DIR})
 
+# Add compile options. Since the target is not created by `idf_component_register()`, we need to add the `ESP_PLATFORM` define manually.
+target_compile_options(usermod_esp_io_expander
+    INTERFACE
+        -Wno-missing-field-initializers -DESP_PLATFORM $<$<COMPILE_LANGUAGE:CXX>:-std=gnu++2b>
+)
+
 # Link our INTERFACE library to the usermod target.
 target_link_libraries(usermod INTERFACE usermod_esp_io_expander)

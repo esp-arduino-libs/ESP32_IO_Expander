@@ -1,6 +1,10 @@
 # ChangeLog
 
-## v1.0.1 - 2024-12-11
+## v1.0.1 - 2025-01-23
+
+### Enhancements:
+
+* feat(base): update base class
 
 ### Bug Fixes:
 
