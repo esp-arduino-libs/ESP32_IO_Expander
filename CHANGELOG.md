@@ -1,5 +1,12 @@
 # ChangeLog
 
+## v1.1.0 - 2025-02-07
+
+### Enhancements:
+
+* feat(repo): add legacy header files to maintain compatibility
+* feat(repo): update with esp-lib-utils v0.2.*
+
 ## v1.0.1 - 2025-01-23
 
 ### Enhancements:
