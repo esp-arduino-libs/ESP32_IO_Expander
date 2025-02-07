@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "inttypes.h"
 #include "driver/i2c.h"
 #include "esp_expander_utils.h"
 #include "esp_expander_base.hpp"
@@ -59,14 +60,14 @@ void Base::Config::printHostConfig(void) const
             "\t\t-> [scl_pullup_en]: %d\n"
             "\t\t-> [master.clk_speed]: %d\n"
             "\t\t-> [clk_flags]: %d"
-            , host_id
-            , config.mode
-            , config.sda_io_num
-            , config.scl_io_num
-            , config.sda_pullup_en
-            , config.scl_pullup_en
-            , config.master.clk_speed
-            , config.clk_flags
+            , static_cast<int>(host_id)
+            , static_cast<int>(config.mode)
+            , static_cast<int>(config.sda_io_num)
+            , static_cast<int>(config.scl_io_num)
+            , static_cast<int>(config.sda_pullup_en)
+            , static_cast<int>(config.scl_pullup_en)
+            , static_cast<int>(config.master.clk_speed)
+            , static_cast<int>(config.clk_flags)
         );
     } else {
         auto &config = std::get<HostPartialConfig>(host.value());
@@ -78,12 +79,12 @@ void Base::Config::printHostConfig(void) const
             "\t\t-> [sda_pullup_en]: %d\n"
             "\t\t-> [scl_pullup_en]: %d\n"
             "\t\t-> [clk_speed]: %d"
-            , host_id
-            , config.sda_io_num
-            , config.scl_io_num
-            , config.sda_pullup_en
-            , config.scl_pullup_en
-            , config.clk_speed
+            , static_cast<int>(host_id)
+            , static_cast<int>(config.sda_io_num)
+            , static_cast<int>(config.scl_io_num)
+            , static_cast<int>(config.sda_pullup_en)
+            , static_cast<int>(config.scl_pullup_en)
+            , static_cast<int>(config.clk_speed)
         );
     }
 
@@ -99,8 +100,8 @@ void Base::Config::printDeviceConfig(void) const
         "\n\t{Device config}[partial]\n"
         "\t\t-> [host_id]: %d\n"
         "\t\t-> [address]: 0x%02X"
-        , host_id
-        , device.address
+        , static_cast<int>(host_id)
+        , static_cast<int>(device.address)
     );
 
     ESP_UTILS_LOG_TRACE_EXIT_WITH_THIS();
@@ -248,7 +249,7 @@ bool Base::multiPinMode(uint32_t pin_mask, uint8_t mode)
 
     ESP_UTILS_CHECK_FALSE_RETURN(isOverState(State::BEGIN), false, "Not begun");
 
-    ESP_UTILS_LOGD("Param: pin_mask(%0x), mode(%d)", pin_mask, mode);
+    ESP_UTILS_LOGD("Param: pin_mask(0x%" PRIx32 "), mode(%d)", pin_mask, mode);
     ESP_UTILS_CHECK_FALSE_RETURN((mode == INPUT) || (mode == OUTPUT), false, "Invalid mode");
 
     esp_io_expander_dir_t dir = (mode == INPUT) ? IO_EXPANDER_INPUT : IO_EXPANDER_OUTPUT;
@@ -265,7 +266,7 @@ bool Base::multiDigitalWrite(uint32_t pin_mask, uint8_t value)
 
     ESP_UTILS_CHECK_FALSE_RETURN(isOverState(State::BEGIN), false, "Not begun");
 
-    ESP_UTILS_LOGD("Param: pin_mask(%0x), value(%d)", pin_mask, value);
+    ESP_UTILS_LOGD("Param: pin_mask(0x%" PRIx32 "), value(%d)", pin_mask, value);
 
     ESP_UTILS_CHECK_ERROR_RETURN(esp_io_expander_set_level(device_handle, pin_mask, value), false, "Set level failed");
 
@@ -280,7 +281,7 @@ int64_t Base::multiDigitalRead(uint32_t pin_mask)
 
     ESP_UTILS_CHECK_FALSE_RETURN(isOverState(State::BEGIN), false, "Not begun");
 
-    ESP_UTILS_LOGD("Param: pin_mask(%0x)", pin_mask);
+    ESP_UTILS_LOGD("Param: pin_mask(0x%" PRIx32 ")", pin_mask);
 
     uint32_t level = 0;
     ESP_UTILS_CHECK_ERROR_RETURN(esp_io_expander_get_level(device_handle, pin_mask, &level), false, "Get level failed");
