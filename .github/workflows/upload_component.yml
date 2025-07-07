@@ -15,6 +15,6 @@ jobs:
       - name: Upload components to component service
         uses: espressif/upload-components-ci-action@v1
         with:
-          name: "ESP32_IO_Expander"
+          name: "esp32_io_expander"
           namespace: "espressif"
           api_token: ${{ secrets.IDF_COMPONENT_API_TOKEN }}

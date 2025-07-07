@@ -48,6 +48,10 @@ esp_err_t esp_io_expander_ch422g_set_all_input(esp_io_expander_handle_t handle);
 
 esp_err_t esp_io_expander_ch422g_set_all_output(esp_io_expander_handle_t handle);
 
+esp_err_t esp_io_expander_ch422g_enter_sleep(esp_io_expander_handle_t handle);
+
+esp_err_t esp_io_expander_ch422g_exit_sleep(esp_io_expander_handle_t handle);
+
 #ifdef __cplusplus
 }
 #endif
