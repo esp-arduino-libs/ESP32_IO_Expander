@@ -38,13 +38,14 @@
                                             // Default:    |  0  |  0  |  0  | 0   |    0    |    0    |    0     |    1    |
 
 // *INDENT-OFF*
-#define REG_WR_OC_DEFAULT_VAL   (0x0FUL)
-#define REG_WR_IO_DEFAULT_VAL   (0xFFUL)
+#define REG_WR_OC_DEFAULT_VAL   (0x0FU)
+#define REG_WR_IO_DEFAULT_VAL   (0xFFU)
 #define REG_OUT_DEFAULT_VAL     ((REG_WR_OC_DEFAULT_VAL << 8) | REG_WR_IO_DEFAULT_VAL)
-#define REG_DIR_DEFAULT_VAL     (0xFFFUL)
+#define REG_DIR_DEFAULT_VAL     (0xFFFU)
 
-#define REG_WR_SET_BIT_IO_OE    (1 << 0)
-#define REG_WR_SET_BIT_OD_EN    (1 << 2)
+#define REG_WR_SET_BIT_IO_OE    (1U << 0)
+#define REG_WR_SET_BIT_OD_EN    (1U << 2)
+#define REG_WR_SET_BIT_SLEEP    (1U << 3)
 
 /**
  * @brief Device Structure Type
@@ -159,6 +160,38 @@ esp_err_t esp_io_expander_ch422g_set_all_output(esp_io_expander_handle_t handle)
 {
     esp_io_expander_ch422g_t *ch422g = (esp_io_expander_ch422g_t *)__containerof(handle, esp_io_expander_ch422g_t, base);
     uint8_t data = (uint8_t)(ch422g->regs.wr_set | REG_WR_SET_BIT_IO_OE);
+
+    // WR-SET
+    ESP_RETURN_ON_ERROR(
+        i2c_master_write_to_device(
+            ch422g->i2c_num, CH422G_REG_WR_SET, &data, sizeof(data), pdMS_TO_TICKS(I2C_TIMEOUT_MS)
+        ), TAG, "Write WR_SET reg failed"
+    );
+    ch422g->regs.wr_set = data;
+
+    return ESP_OK;
+}
+
+esp_err_t esp_io_expander_ch422g_enter_sleep(esp_io_expander_handle_t handle)
+{
+    esp_io_expander_ch422g_t *ch422g = (esp_io_expander_ch422g_t *)__containerof(handle, esp_io_expander_ch422g_t, base);
+    uint8_t data = (uint8_t)(ch422g->regs.wr_set | REG_WR_SET_BIT_SLEEP);
+
+    // WR-SET
+    ESP_RETURN_ON_ERROR(
+        i2c_master_write_to_device(
+            ch422g->i2c_num, CH422G_REG_WR_SET, &data, sizeof(data), pdMS_TO_TICKS(I2C_TIMEOUT_MS)
+        ), TAG, "Write WR_SET reg failed"
+    );
+    ch422g->regs.wr_set = data;
+
+    return ESP_OK;
+}
+
+esp_err_t esp_io_expander_ch422g_exit_sleep(esp_io_expander_handle_t handle)
+{
+    esp_io_expander_ch422g_t *ch422g = (esp_io_expander_ch422g_t *)__containerof(handle, esp_io_expander_ch422g_t, base);
+    uint8_t data = (uint8_t)(ch422g->regs.wr_set & ~REG_WR_SET_BIT_SLEEP);
 
     // WR-SET
     ESP_RETURN_ON_ERROR(

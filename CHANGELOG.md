@@ -1,5 +1,15 @@
 # ChangeLog
 
+## v1.1.1 - 2025-07-07
+
+### Enhancements:
+
+* feat(ch422g): support enter/exit sleep
+
+### Bug Fixes:
+
+* fix(port): fix discarded qualifiers warning
+
 ## v1.1.0 - 2025-02-07
 
 ### Enhancements:
