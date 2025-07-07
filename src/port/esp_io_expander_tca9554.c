@@ -45,7 +45,7 @@ typedef struct {
     } regs;
 } esp_io_expander_tca9554_t;
 
-static char *TAG = "tca9554";
+static const char *TAG = "tca9554";
 
 static esp_err_t read_input_reg(esp_io_expander_handle_t handle, uint32_t *value);
 static esp_err_t write_output_reg(esp_io_expander_handle_t handle, uint32_t value);
