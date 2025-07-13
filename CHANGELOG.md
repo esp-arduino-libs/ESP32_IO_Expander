@@ -1,5 +1,13 @@
 # ChangeLog
 
+## v2.0.0 - 2025-07-13
+
+### Breaking Changes:
+
+* break(repo): depend on esp-idf v5.4 or later (arduino-esp32 v3.2.0 or later)
+* break(repo): remove legacy header files and macros which are marked as deprecated
+* break(repo): support i2c-ng driver and not compatible with old i2c driver
+
 ## v1.1.1 - 2025-07-07
 
 ### Enhancements:

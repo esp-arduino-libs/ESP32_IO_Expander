@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2022 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2022-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -12,33 +12,31 @@
 #pragma once
 
 #include <stdint.h>
-
-#include "driver/i2c.h"
 #include "esp_err.h"
-
+#include "driver/i2c_master.h"
 #include "esp_io_expander.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define ESP_IO_EXPANDER_TCA9554_VER_MAJOR    (1)
+#define ESP_IO_EXPANDER_TCA9554_VER_MAJOR    (2)
 #define ESP_IO_EXPANDER_TCA9554_VER_MINOR    (0)
 #define ESP_IO_EXPANDER_TCA9554_VER_PATCH    (1)
 
 /**
- * @brief Create a new TCA9554 IO expander driver
+ * @brief Create a TCA9554(A) IO expander object
  *
- * @note The I2C communication should be initialized before use this function
- *
- * @param i2c_num: I2C port num
- * @param i2c_address: I2C address of chip
- * @param handle: IO expander handle
+ * @param[in]  i2c_bus    I2C bus handle. Obtained from `i2c_new_master_bus()`
+ * @param[in]  i2c_dev_cfg   I2C device configuration.
+ * @param[out] handle_ret Handle to created IO expander object
  *
  * @return
  *      - ESP_OK: Success, otherwise returns ESP_ERR_xxx
  */
-esp_err_t esp_io_expander_new_i2c_tca9554(i2c_port_t i2c_num, uint32_t i2c_address, esp_io_expander_handle_t *handle);
+esp_err_t esp_io_expander_new_i2c_tca9554(
+    i2c_master_bus_handle_t i2c_bus, const i2c_device_config_t *i2c_dev_cfg, esp_io_expander_handle_t *handle_ret
+);
 
 /**
  * @brief I2C address of the TCA9554
@@ -92,6 +90,20 @@ esp_err_t esp_io_expander_new_i2c_tca9554(i2c_port_t i2c_num, uint32_t i2c_addre
 #define ESP_IO_EXPANDER_I2C_TCA9554A_ADDRESS_101    (0x3D)
 #define ESP_IO_EXPANDER_I2C_TCA9554A_ADDRESS_110    (0x3E)
 #define ESP_IO_EXPANDER_I2C_TCA9554A_ADDRESS_111    (0x3F)
+
+/**
+ * @brief Macro to create a I2C device configuration for TCA9554(A)
+ *
+ * @param[in] address I2C device address
+ * @param[in] freq_hz I2C bus frequency
+ * @return I2C device configuration
+ */
+#define ESP_IO_EXPANDER_I2C_TCA9554_DEVICE_CFG(address, freq_hz) \
+    { \
+        .dev_addr_length = I2C_ADDR_BIT_LEN_7, \
+        .device_address = address, \
+        .scl_speed_hz = freq_hz, \
+    }
 
 #ifdef __cplusplus
 }

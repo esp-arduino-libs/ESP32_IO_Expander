@@ -14,8 +14,8 @@
 #include "port/esp_io_expander_tca95xx_16bit.h"
 
 /* Wrapper classes */
-#include "chip/esp_expander_base.hpp"
-#include "chip/esp_expander_ch422g.hpp"
-#include "chip/esp_expander_ht8574.hpp"
-#include "chip/esp_expander_tca95xx_8bit.hpp"
-#include "chip/esp_expander_tca95xx_16bit.hpp"
+#include "esp_expander_base.hpp"
+#include "esp_expander_ch422g.hpp"
+#include "esp_expander_ht8574.hpp"
+#include "esp_expander_tca95xx_8bit.hpp"
+#include "esp_expander_tca95xx_16bit.hpp"
