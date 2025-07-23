@@ -27,31 +27,31 @@ public:
      *
      * @param[in] scl_io  I2C SCL pin number
      * @param[in] sda_io  I2C SDA pin number
-     * @param[in] address I2C device 7-bit address. Should be like `ESP_IO_EXPANDER_I2C_<chip name>_ADDRESS`.
+     * @param[in] address I2C device 7-bit address. This parameter is unused and just for compatibility.
      */
-    CH422G(int scl_io, int sda_io, uint8_t address): Base(scl_io, sda_io, address) {}
+    CH422G(int scl_io, int sda_io, uint8_t address = 0)
+        : Base(scl_io, sda_io, address)
+    {}
 
     /**
      * @brief Construct a CH422G device. With this function, call `init()` will not initialize I2C, and users should
      *        initialize it manually.
      *
      * @param[in] host_id I2C host ID.
-     * @param[in] address I2C device 7-bit address. Should be like `ESP_IO_EXPANDER_I2C_<chip name>_ADDRESS`.
+     * @param[in] address I2C device 7-bit address. Should be like `ESP_IO_EXPANDER_I2C_<chip_name>_ADDRESS*`.
      */
-    CH422G(int host_id, uint8_t address): Base(host_id, address) {}
+    CH422G(int host_id, uint8_t address = 0)
+        : Base(host_id, address)
+    {}
 
     /**
      * @brief Construct a CH422G device.
      *
      * @param[in] config Configuration for the object
      */
-    CH422G(const Config &config): Base(config) {}
-
-    /**
-     * @deprecated Deprecated and will be removed in the next major version. Please use other constructors instead.
-     */
-    [[deprecated("Deprecated and will be removed in the next major version. Please use other constructors instead.")]]
-    CH422G(i2c_port_t id, uint8_t address, int scl_io, int sda_io): Base(id, address, scl_io, sda_io) {}
+    CH422G(const Config &config)
+        : Base(config)
+    {}
 
     /**
      * @brief Desutruct object. This function will call `del()` to delete the object.
@@ -61,26 +61,26 @@ public:
     /**
      * @brief Begin object
      *
-     * @note  This function typically calls `esp_io_expander_new_i2c_*()` to create the IO expander handle.
+     * @note  This function typically calls `esp_io_expander_new_i2c_ch422g()` to create the IO expander handle.
      * @note  This function sets all IO0-7 pins to output high-level mode by default.
      *
      * @return true if success, otherwise false
      */
-    bool begin(void) override;
+    bool begin() override;
 
     /**
      * @brief Enable OC0-OC3 output open-drain
      *
      * @return true if success, otherwise false
      */
-    bool enableOC_OpenDrain(void);
+    bool enableOC_OpenDrain();
 
     /**
      * @brief Enable OC0-OC3 output push-pull (default mode when power-on)
      *
      * @return true if success, otherwise false
      */
-    bool enableOC_PushPull(void);
+    bool enableOC_PushPull();
 
     /**
      * @brief Enable IO0-7 input mode
@@ -91,33 +91,28 @@ public:
      *
      * @return true if success, otherwise false
      */
-    bool enableAllIO_Input(void);
+    bool enableAllIO_Input();
 
     /**
      * @brief Enable IO0-7 output mode
      *
      * @return true if success, otherwise false
      */
-    bool enableAllIO_Output(void);
+    bool enableAllIO_Output();
 
     /**
      * @brief Enter sleep mode
      *
      * @return true if success, otherwise false
      */
-    bool enterSleep(void);
+    bool enterSleep();
 
     /**
      * @brief Exit sleep mode
      *
      * @return true if success, otherwise false
      */
-    bool exitSleep(void);
+    bool exitSleep();
 };
 
 } // namespace esp_expander
-
-/**
- * @deprecated Deprecated and will be removed in the next major version. Please use `esp_expander::CH422G` instead.
- */
-typedef esp_expander::CH422G ESP_IOExpander_CH422G __attribute__((deprecated("Deprecated and will be removed in the next major version. Please use `esp_expander::CH422G` instead.")));

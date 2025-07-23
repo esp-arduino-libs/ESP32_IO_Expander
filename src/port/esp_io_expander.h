@@ -20,16 +20,22 @@
 extern "C" {
 #endif
 
+#define ESP_IO_EXPANDER_VER_MAJOR    (1)
+#define ESP_IO_EXPANDER_VER_MINOR    (0)
+#define ESP_IO_EXPANDER_VER_PATCH    (1)
+
 #define IO_COUNT_MAX        (sizeof(uint32_t) * 8)
 
 /**
  * @brief IO Expander Device Type
+ *
  */
 typedef struct esp_io_expander_s esp_io_expander_t;
 typedef esp_io_expander_t *esp_io_expander_handle_t;
 
 /**
  * @brief IO Expander Pin Num
+ *
  */
 typedef enum {
     IO_EXPANDER_PIN_NUM_0  = (1ULL << 0),
@@ -68,6 +74,7 @@ typedef enum {
 
 /**
  * @brief IO Expander Pin direction
+ *
  */
 typedef enum {
     IO_EXPANDER_INPUT,          /*!< Input direction */
@@ -76,6 +83,7 @@ typedef enum {
 
 /**
  * @brief IO Expander Configuration Type
+ *
  */
 typedef struct {
     uint8_t io_count;                       /*!< Count of device's IO, must be less or equal than `IO_COUNT_MAX` */
