@@ -12,10 +12,3 @@ idf_component_register(
     REQUIRES
         driver
 )
-
-target_compile_options(${COMPONENT_LIB}
-    PUBLIC
-        -Wno-missing-field-initializers
-    PRIVATE
-        $<$<COMPILE_LANGUAGE:CXX>:-std=gnu++17>
-)

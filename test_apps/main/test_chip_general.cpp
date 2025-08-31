@@ -6,7 +6,6 @@
 
 #include <memory>
 #include <inttypes.h>
-#include "driver/i2c.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_heap_caps.h"
@@ -25,17 +24,12 @@ static const char *TAG = "general_test";
 #define TEST_HOST_I2C_SDA_PIN   (47)
 #define TEST_DEVICE_ADDRESS     (ESP_IO_EXPANDER_I2C_TCA9554_ADDRESS_000)
 
-#define HOST_CONFIG_DEFAULT(scl, sda) \
+#define HOST_CONFIG_DEFAULT() \
     { \
-        .mode = I2C_MODE_MASTER, \
-        .sda_io_num = (sda), \
-        .scl_io_num = (scl), \
-        .sda_pullup_en = GPIO_PULLUP_ENABLE, \
-        .scl_pullup_en = GPIO_PULLUP_ENABLE, \
-        .master = { \
-            .clk_speed = 400000, \
-        }, \
-        .clk_flags = I2C_SCLK_SRC_FLAG_FOR_NOMAL, \
+        .i2c_port = TEST_HOST_ID, \
+        .sda_io_num = static_cast<gpio_num_t>(TEST_HOST_I2C_SDA_PIN), \
+        .scl_io_num = static_cast<gpio_num_t>(TEST_HOST_I2C_SCL_PIN), \
+        .clk_source = I2C_CLK_SRC_DEFAULT, \
     }
 
 #define _CREATE_DEVICE(name, ...) \
@@ -47,16 +41,19 @@ static const char *TAG = "general_test";
     })
 #define CREATE_DEVICE(name, ...) _CREATE_DEVICE(name, ##__VA_ARGS__)
 
-static void init_host(void)
+static i2c_master_bus_handle_t init_host(void)
 {
-    const i2c_config_t i2c_config = HOST_CONFIG_DEFAULT(TEST_HOST_I2C_SCL_PIN, TEST_HOST_I2C_SDA_PIN);
-    TEST_ASSERT_EQUAL(i2c_param_config(TEST_HOST_ID, &i2c_config), ESP_OK);
-    TEST_ASSERT_EQUAL(i2c_driver_install(TEST_HOST_ID, i2c_config.mode, 0, 0, 0), ESP_OK);
+    const i2c_master_bus_config_t i2c_config = HOST_CONFIG_DEFAULT();
+    i2c_master_bus_handle_t i2c_handle = nullptr;
+    esp_err_t ret = i2c_new_master_bus(&i2c_config, &i2c_handle);
+    TEST_ASSERT_EQUAL_MESSAGE(ESP_OK, ret, "I2C install returned error");
+    return i2c_handle;
 }
 
-static void deinit_host(void)
+static void deinit_host(i2c_master_bus_handle_t i2c_handle)
 {
-    TEST_ASSERT_EQUAL(i2c_driver_delete(TEST_HOST_ID), ESP_OK);
+    esp_err_t ret = i2c_del_master_bus(i2c_handle);
+    TEST_ASSERT_EQUAL_MESSAGE(ESP_OK, ret, "I2C uninstall returned error");
 }
 
 static void test_device(std::shared_ptr<Base> device)
@@ -73,7 +70,7 @@ static void test_device(std::shared_ptr<Base> device)
         std::shared_ptr<Base> expander = nullptr; \
         \
         ESP_LOGI(TAG, "Initialize I2C host"); \
-        init_host(); \
+        i2c_master_bus_handle_t i2c_handle = init_host(); \
         \
         ESP_LOGI(TAG, "Test constructor with (int host_id, uint8_t address) (external I2C)"); \
         expander = CREATE_DEVICE(device_name, TEST_HOST_ID, TEST_DEVICE_ADDRESS); \
@@ -83,7 +80,7 @@ static void test_device(std::shared_ptr<Base> device)
         ESP_LOGI(TAG, "Test constructor with (const Config &config) (external I2C)"); \
         Base::Config external_i2c_config = { \
             .host_id = TEST_HOST_ID, \
-            .device = Base::DeviceConfig{ \
+            .device = Base::DevicePartialConfig{ \
                 .address = TEST_DEVICE_ADDRESS, \
             }, \
         }; \
@@ -92,7 +89,7 @@ static void test_device(std::shared_ptr<Base> device)
         expander = nullptr; \
         \
         ESP_LOGI(TAG, "Deinitialize I2C host"); \
-        deinit_host(); \
+        deinit_host(i2c_handle); \
         \
         ESP_LOGI(TAG, "Test constructor with (int scl_io, int sda_io, uint8_t address) (internal I2C)"); \
         expander = CREATE_DEVICE(device_name, TEST_HOST_I2C_SCL_PIN, TEST_HOST_I2C_SDA_PIN, TEST_DEVICE_ADDRESS); \
@@ -103,10 +100,10 @@ static void test_device(std::shared_ptr<Base> device)
         Base::Config internal_i2c_config = { \
             .host_id = TEST_HOST_ID, \
             .host = Base::HostPartialConfig{ \
-                .sda_io_num = TEST_HOST_I2C_SDA_PIN, \
-                .scl_io_num = TEST_HOST_I2C_SCL_PIN, \
+                .sda_io_num = static_cast<gpio_num_t>(TEST_HOST_I2C_SDA_PIN), \
+                .scl_io_num = static_cast<gpio_num_t>(TEST_HOST_I2C_SCL_PIN), \
             }, \
-            .device = Base::DeviceConfig{ \
+            .device = Base::DevicePartialConfig{ \
                 .address = TEST_DEVICE_ADDRESS, \
             }, \
         }; \

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2023 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2023-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -7,19 +7,15 @@
 #include <inttypes.h>
 #include <string.h>
 #include <stdlib.h>
-
-#include "driver/i2c.h"
 #include "esp_bit_defs.h"
 #include "esp_check.h"
 #include "esp_log.h"
-
 #include "esp_io_expander.h"
 #include "esp_io_expander_ht8574.h"
+#include "private/esp_expander_utils.h"
 
-#include "esp_expander_utils.h"
-
-/* Timeout of each I2C communication */
-#define I2C_TIMEOUT_MS          (10)
+/* I2C communication related */
+#define I2C_TIMEOUT_MS          (1000)
 
 #define IO_COUNT                (8)
 
@@ -29,11 +25,11 @@
 
 /**
  * @brief Device Structure Type
+ *
  */
 typedef struct {
     esp_io_expander_t base;
-    i2c_port_t i2c_num;
-    uint32_t i2c_address;
+    i2c_master_dev_handle_t i2c_handle;
     struct {
         uint8_t direction;
         uint8_t output;
@@ -50,20 +46,25 @@ static esp_err_t read_direction_reg(esp_io_expander_handle_t handle, uint32_t *v
 static esp_err_t reset(esp_io_expander_t *handle);
 static esp_err_t del(esp_io_expander_t *handle);
 
-esp_err_t esp_io_expander_new_i2c_ht8574(i2c_port_t i2c_num, uint32_t i2c_address, esp_io_expander_handle_t *handle)
+esp_err_t esp_io_expander_new_i2c_ht8574(
+    i2c_master_bus_handle_t i2c_bus, const i2c_device_config_t *i2c_dev_cfg, esp_io_expander_handle_t *handle_ret
+)
 {
     ESP_LOGI(TAG, "version: %d.%d.%d", ESP_IO_EXPANDER_HT8574_VER_MAJOR, ESP_IO_EXPANDER_HT8574_VER_MINOR,
              ESP_IO_EXPANDER_HT8574_VER_PATCH);
-    ESP_RETURN_ON_FALSE(i2c_num < I2C_NUM_MAX, ESP_ERR_INVALID_ARG, TAG, "Invalid i2c num");
-    ESP_RETURN_ON_FALSE(handle, ESP_ERR_INVALID_ARG, TAG, "Invalid handle");
+    ESP_RETURN_ON_FALSE(handle_ret != NULL, ESP_ERR_INVALID_ARG, TAG, "Invalid handle_ret");
 
+    // Allocate memory for driver object
     esp_io_expander_ht8574_t *ht8574 = (esp_io_expander_ht8574_t *)calloc(1, sizeof(esp_io_expander_ht8574_t));
-    ESP_RETURN_ON_FALSE(ht8574, ESP_ERR_NO_MEM, TAG, "Malloc failed");
+    ESP_RETURN_ON_FALSE(ht8574 != NULL, ESP_ERR_NO_MEM, TAG, "Malloc failed");
 
+    // Add new I2C device
+    esp_err_t ret = ESP_OK;
+    ESP_GOTO_ON_ERROR(i2c_master_bus_add_device(i2c_bus, i2c_dev_cfg, &ht8574->i2c_handle), err, TAG, "Add new I2C device failed");
+
+    // Initialize device structure
     ht8574->base.config.io_count = IO_COUNT;
     ht8574->base.config.flags.dir_out_bit_zero = 1;
-    ht8574->i2c_num = i2c_num;
-    ht8574->i2c_address = i2c_address;
     ht8574->base.read_input_reg = read_input_reg;
     ht8574->base.write_output_reg = write_output_reg;
     ht8574->base.read_output_reg = read_output_reg;
@@ -72,27 +73,28 @@ esp_err_t esp_io_expander_new_i2c_ht8574(i2c_port_t i2c_num, uint32_t i2c_addres
     ht8574->base.del = del;
     ht8574->base.reset = reset;
 
-    esp_err_t ret = ESP_OK;
-    /* Reset configuration and register status */
+    // Reset configuration and register status
     ESP_GOTO_ON_ERROR(reset(&ht8574->base), err, TAG, "Reset failed");
 
-    *handle = &ht8574->base;
+    *handle_ret = &ht8574->base;
     return ESP_OK;
+
 err:
-    free(ht8574);
+    if (ht8574 != NULL) {
+        if (ht8574->i2c_handle != NULL) {
+            i2c_master_bus_rm_device(ht8574->i2c_handle);
+        }
+        free(ht8574);
+    }
     return ret;
 }
 
 static esp_err_t read_input_reg(esp_io_expander_handle_t handle, uint32_t *value)
 {
     esp_io_expander_ht8574_t *ht8574 = (esp_io_expander_ht8574_t *)__containerof(handle, esp_io_expander_ht8574_t, base);
-
     uint8_t temp = 0;
-    // *INDENT-OFF*
-    ESP_RETURN_ON_ERROR(
-        i2c_master_read_from_device(ht8574->i2c_num, ht8574->i2c_address, &temp, 1, pdMS_TO_TICKS(I2C_TIMEOUT_MS)),
-        TAG, "Read input reg failed");
-    // *INDENT-ON*
+
+    ESP_RETURN_ON_ERROR(i2c_master_receive(ht8574->i2c_handle, &temp, sizeof(temp), I2C_TIMEOUT_MS), TAG, "Read input reg failed");
     *value = temp;
     return ESP_OK;
 }
@@ -101,11 +103,9 @@ static esp_err_t write_output_reg(esp_io_expander_handle_t handle, uint32_t valu
 {
     esp_io_expander_ht8574_t *ht8574 = (esp_io_expander_ht8574_t *)__containerof(handle, esp_io_expander_ht8574_t, base);
     value &= 0xff;
-
     uint8_t data = (uint8_t)value;
-    ESP_RETURN_ON_ERROR(
-        i2c_master_write_to_device(ht8574->i2c_num, ht8574->i2c_address, &data, 1, pdMS_TO_TICKS(I2C_TIMEOUT_MS)),
-        TAG, "Write output reg failed");
+
+    ESP_RETURN_ON_ERROR(i2c_master_transmit(ht8574->i2c_handle, &data, sizeof(data), I2C_TIMEOUT_MS), TAG, "Write output reg failed");
     ht8574->regs.output = value;
     return ESP_OK;
 }
@@ -144,6 +144,7 @@ static esp_err_t del(esp_io_expander_t *handle)
 {
     esp_io_expander_ht8574_t *ht8574 = (esp_io_expander_ht8574_t *)__containerof(handle, esp_io_expander_ht8574_t, base);
 
+    ESP_RETURN_ON_ERROR(i2c_master_bus_rm_device(ht8574->i2c_handle), TAG, "Remove I2C device failed");
     free(ht8574);
     return ESP_OK;
 }
