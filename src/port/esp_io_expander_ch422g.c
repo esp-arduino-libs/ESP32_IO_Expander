@@ -101,7 +101,7 @@ esp_err_t esp_io_expander_new_i2c_ch422g(
     esp_err_t ret = ESP_OK;
     i2c_device_config_t temp_cfg = *i2c_dev_cfg;
     for (int i = 0; i < CH422G_REG_TYPE_NUM; i++) {
-        temp_cfg.device_address = REG_TYPE_ADDR[i] << 1;
+        temp_cfg.device_address = REG_TYPE_ADDR[i];
         ret = i2c_master_bus_add_device(i2c_bus, &temp_cfg, &ch422g->i2c_handles[i]);
         ESP_GOTO_ON_ERROR(ret, err, TAG, "Add new I2C device(%d) failed(%s)", REG_TYPE_ADDR[i], esp_err_to_name(ret));
     }
