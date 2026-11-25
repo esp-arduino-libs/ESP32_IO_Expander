@@ -10,5 +10,5 @@ idf_component_register(
     INCLUDE_DIRS
         ${SRCS_DIR}
     REQUIRES
-        driver
+        esp_driver_i2c
 )
