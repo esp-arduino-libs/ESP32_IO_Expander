@@ -10,12 +10,5 @@ idf_component_register(
     INCLUDE_DIRS
         ${SRCS_DIR}
     REQUIRES
-        driver
-)
-
-target_compile_options(${COMPONENT_LIB}
-    PUBLIC
-        -Wno-missing-field-initializers
-    PRIVATE
-        $<$<COMPILE_LANGUAGE:CXX>:-std=gnu++17>
+        esp_driver_i2c
 )

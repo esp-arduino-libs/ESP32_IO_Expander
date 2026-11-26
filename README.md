@@ -4,7 +4,7 @@
 
 **Latest Espressif Component Version**: [![Espressif Release](https://components.espressif.com/components/espressif/esp32_io_expander/badge.svg)](https://components.espressif.com/components/espressif/esp32_io_expander)
 
-# ESP32_IO_Expander
+# ESP IO Expander
 
 ## Overview
 
@@ -17,7 +17,7 @@
 
 ## Table of Contents
 
-- [ESP32\_IO\_Expander](#esp32_io_expander)
+- [ESP IO Expander](#esp-io-expander)
   - [Overview](#overview)
   - [Table of Contents](#table-of-contents)
   - [Supported Drivers](#supported-drivers)
@@ -41,9 +41,9 @@
 |                                              **Driver**                                              | **Version** |
 | ---------------------------------------------------------------------------------------------------- | ----------- |
 | [esp_io_expander](https://components.espressif.com/components/espressif/esp_io_expander)             | 1.0.1       |
-| [TCA95XX_8BIT](https://components.espressif.com/components/espressif/esp_io_expander_tca9554)        | 1.0.1       |
-| [TCA95XX_16BIT](https://components.espressif.com/components/espressif/esp_io_expander_tca95xx_16bit) | 1.0.0       |
-| [HT8574](https://components.espressif.com/components/espressif/esp_io_expander_ht8574)               | 1.0.0       |
+| [TCA95XX_8BIT](https://components.espressif.com/components/espressif/esp_io_expander_tca9554)        | 2.0.1       |
+| [TCA95XX_16BIT](https://components.espressif.com/components/espressif/esp_io_expander_tca95xx_16bit) | 2.0.0       |
+| [HT8574](https://components.espressif.com/components/espressif/esp_io_expander_ht8574)               | 2.0.0       |
 | CH422G                                                                                               | x           |
 
 ## How to Use
@@ -52,17 +52,17 @@
 
 #### Dependencies and Versions
 
-|                           **Dependency**                           |     **Version**      |
-| ------------------------------------------------------------------ | -------------------- |
-| [esp-idf](https://github.com/espressif/esp-idf)                    | >= 5.1               |
-| [esp-lib-utils](https://github.com/esp-arduino-libs/esp-lib-utils) | >= 0.1.0 && <= 0.2.0 |
+|                           **Dependency**                           | **Version** |
+| ------------------------------------------------------------------ | ----------- |
+| [esp-idf](https://github.com/espressif/esp-idf)                    | >= 5.4      |
+| [esp-lib-utils](https://github.com/esp-arduino-libs/esp-lib-utils) | 0.2.*       |
 
 #### Adding to Project
 
 `ESP32_IO_Expander` has been uploaded to the [Espressif Component Registry](https://components.espressif.com/), and users can add it to their project using the `idf.py add-dependency` command, for example:
 
 ```bash
-idf.py add-dependency "espressif/ESP32_IO_Expander"
+idf.py add-dependency "espressif/esp32_io_expander==2.*"
 ```
 
 Alternatively, users can create or modify the *idf_component.yml* file in the project directory. For more details, please refer to the [Espressif Documentation - IDF Component Manager](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/tools/idf-component-manager.html).
@@ -75,14 +75,16 @@ Since `ESP32_IO_Expander` depends on the `esp-lib-utils` library which implement
 
 #### Dependencies and Versions
 
-|                           **Dependency**                           |     **Version**      |
-| ------------------------------------------------------------------ | -------------------- |
-| [arduino-esp32](https://github.com/espressif/arduino-esp32)        | >= v3.0.0            |
-| [esp-lib-utils](https://github.com/esp-arduino-libs/esp-lib-utils) | >= 0.1.0 && <= 0.2.0 |
+|                           **Dependency**                           |     **Version**     |
+| ------------------------------------------------------------------ | ------------------- |
+| [arduino-esp32](https://github.com/espressif/arduino-esp32)        | >= v3.2.0           |
+| [esp-lib-utils](https://github.com/esp-arduino-libs/esp-lib-utils) | >= 0.2.0 && < 0.3.0 |
 
 #### Installing the Library
 
 For installation of the `ESP32_IO_Expander` library, refer to [How to Install ESP32_IO_Expander in Arduino IDE](#how-to-install-ESP32_IO_Expander-in-arduino-ide).
+
+When using ESP32_Display_Panel, install both libraries from the same major version. Keep ESP32_IO_Expander 1.x for Panel 1.x or projects using the legacy I²C driver.
 
 #### Configuration Instructions
 

@@ -8,21 +8,21 @@
 
 #include <optional>
 #include <variant>
-#include "driver/i2c.h"
+#include "driver/i2c_master.h"
 #include "port/esp_io_expander.h"
 
 // Refer to `esp32-hal-gpio.h` in Arduino
-#ifndef INPUT
-#define INPUT             0x01
+#ifndef    INPUT
+#   define INPUT             0x01
 #endif
-#ifndef OUTPUT
-#define OUTPUT            0x03
+#ifndef    OUTPUT
+#   define OUTPUT            0x03
 #endif
-#ifndef LOW
-#define LOW               0x0
+#ifndef    LOW
+#   define LOW               0x0
 #endif
-#ifndef HIGH
-#define HIGH              0x1
+#ifndef    HIGH
+#   define HIGH              0x1
 #endif
 
 namespace esp_expander {
@@ -38,39 +38,42 @@ public:
     /**
      * Here are some default values for I2C bus
      */
-    constexpr static int I2C_HOST_ID_DEFAULT = static_cast<int>(I2C_NUM_0);
-    constexpr static int I2C_CLK_SPEED_DEFAULT = 400 * 1000;
+    static constexpr int  I2C_HOST_ID_DEFAULT = static_cast<int>(I2C_NUM_0);
+    static constexpr int  I2C_CLK_SPEED_DEFAULT = 400 * 1000;
+    static constexpr bool I2C_ENABLE_INTERNAL_PULLUP_DEFAULT = true;
 
+    using HostHandle   = i2c_master_bus_handle_t;
     using DeviceHandle = esp_io_expander_handle_t;
 
     struct HostPartialConfig {
         int sda_io_num = -1;
         int scl_io_num = -1;
-        bool sda_pullup_en = GPIO_PULLUP_ENABLE;
-        bool scl_pullup_en = GPIO_PULLUP_ENABLE;
-        int clk_speed = I2C_CLK_SPEED_DEFAULT;
+        bool enable_internal_pullup = I2C_ENABLE_INTERNAL_PULLUP_DEFAULT;
     };
-    using HostFullConfig = i2c_config_t;
+    using HostFullConfig = i2c_master_bus_config_t;
     using HostConfig = std::variant<HostPartialConfig, HostFullConfig>;
 
-    struct DeviceConfig {
-        uint8_t address = 0;
+    struct DevicePartialConfig {
+        int address = -1;
+        int freq_hz = I2C_CLK_SPEED_DEFAULT;
     };
+    using DeviceFullConfig = i2c_device_config_t;
+    using DeviceConfig = std::variant<DevicePartialConfig, DeviceFullConfig>;
 
     /**
      * @brief Configuration for Base object
      */
     struct Config {
-        void convertPartialToFull(void);
-        void printHostConfig(void) const;
-        void printDeviceConfig(void) const;
+        void convertPartialToFull();
+        void dumpHost() const;
+        void dumpDevice() const;
 
-        bool isHostConfigValid(void) const
+        bool isHostConfigValid() const
         {
             return host.has_value();
         }
 
-        int host_id = I2C_HOST_ID_DEFAULT;  /*!< I2C host ID */
+        int host_id = I2C_HOST_ID_DEFAULT;
         std::optional<HostConfig> host;     /*!< I2C host configuration */
         DeviceConfig device = {};           /*!< I2C device configuration */
     };
@@ -91,38 +94,36 @@ public:
      *
      * @param[in] scl_io  I2C SCL pin number
      * @param[in] sda_io  I2C SDA pin number
-     * @param[in] address I2C device 7-bit address. Should be like `ESP_IO_EXPANDER_I2C_<chip_name>_ADDRESS`.
+     * @param[in] address I2C device 7-bit address. Should be like `ESP_IO_EXPANDER_I2C_<chip_name>_ADDRESS*`.
      */
-    Base(int scl_io, int sda_io, uint8_t address):
-        _config{
+    Base(int scl_io, int sda_io, uint8_t address)
+        : config_{
             .host_id = I2C_HOST_ID_DEFAULT,
             .host = HostPartialConfig{
                 .sda_io_num = sda_io,
                 .scl_io_num = scl_io,
             },
-            .device = DeviceConfig{
-                .address = address
+            .device = DevicePartialConfig{
+                .address = address,
             }
         }
-    {
-    }
+    {}
 
     /**
      * @brief Construct a base device. With this function, call `init()` will not initialize I2C, and users should
      *        initialize it manually.
      *
      * @param[in] host_id I2C host ID.
-     * @param[in] address I2C device 7-bit address. Should be like `ESP_IO_EXPANDER_I2C_<chip_name>_ADDRESS`.
+     * @param[in] address I2C device 7-bit address. Should be like `ESP_IO_EXPANDER_I2C_<chip_name>_ADDRESS*`.
      */
-    Base(int host_id, uint8_t address):
-        _config{
+    Base(int host_id, uint8_t address)
+        : config_{
             .host_id = host_id,
-            .device = DeviceConfig{
-                .address = address
+            .device = DevicePartialConfig{
+                .address = address,
             }
         }
-    {
-    }
+    {}
 // *INDENT-ON*
 
     /**
@@ -130,7 +131,9 @@ public:
      *
      * @param[in] config Configuration for the object
      */
-    Base(const Config &config): _config(config) {}
+    Base(const Config &config)
+        : config_(config)
+    {}
 
     /**
      * @brief Virtual desutruct object.
@@ -157,26 +160,26 @@ public:
      *
      * @return true if success, otherwise false
      */
-    bool init(void);
+    bool init();
 
     /**
      * @brief Begin object
      *
      * @note  This function typically calls `esp_io_expander_new_i2c_*()` to create the IO expander handle.
      */
-    virtual bool begin(void) = 0;
+    virtual bool begin() = 0;
 
     /**
      * @brief Reset object
      *
      * @return true if success, otherwise false
      */
-    bool reset(void);
+    bool reset();
 
     /**
      * @brief Delete object
      */
-    bool del(void);
+    bool del();
 
     /**
      * @brief Set pin mode
@@ -247,7 +250,14 @@ public:
      *
      * @return Pin levels, every bit represents a pin (HIGH / LOW)
      */
-    bool printStatus(void) const;
+    bool printStatus() const;
+
+    /**
+     * @brief Get host handle
+     *
+     * @return Host handle
+     */
+    HostHandle getHostHandle();
 
     /**
      * @brief Check if the driver has reached or passed the specified state
@@ -258,7 +268,7 @@ public:
      */
     bool isOverState(State state) const
     {
-        return (_state >= state);
+        return (state_ >= state);
     }
 
     /**
@@ -266,9 +276,9 @@ public:
      *
      * @return IO expander Configuration
      */
-    const Config &getConfig(void) const
+    const Config &getConfig() const
     {
-        return _config;
+        return config_;
     }
 
     /**
@@ -276,49 +286,30 @@ public:
      *
      * @return Device handle if success, otherwise nullptr
      */
-    DeviceHandle getDeviceHandle(void) const
+    DeviceHandle getDeviceHandle() const
     {
         return device_handle;
     }
 
-    // TODO: Remove in the next major version
-    Base(i2c_port_t id, uint8_t address, int scl_io, int sda_io):
-        Base(scl_io, sda_io, address)
-    {
-        _config.host_id = id;
-    }
-    [[deprecated("Deprecated and will be removed in the next major version. Please use `getDeviceHandle()` instead.")]]
-    esp_io_expander_handle_t getHandle(void) const
-    {
-        return getDeviceHandle();
-    }
-
 protected:
-    bool isHostSkipInit(void) const
-    {
-        return !_config.isHostConfigValid() || _is_host_skip_init;
-    }
-
     void setState(State state)
     {
-        _state = state;
+        state_ = state;
     }
+
+    DeviceFullConfig *getDeviceFullConfig();
 
     DeviceHandle device_handle = nullptr;
 
 private:
     HostFullConfig *getHostFullConfig();
 
-    State _state = State::DEINIT;
-    bool _is_host_skip_init = false;
-    Config _config = {};
+    Config config_ = {};
+    State state_ = State::DEINIT;
+    HostHandle host_handle_ = nullptr;
+    struct {
+        int is_host_skip_init : 1;
+    } flags_ = {};
 };
 
 } // namespace esp_expander
-
-/**
- * @brief Alias for backward compatibility
- *
- * @deprecated Use `esp_expander::Base` instead
- */
-using ESP_IOExpander [[deprecated("Use `esp_expander::Base` instead.")]] = esp_expander::Base;

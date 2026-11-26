@@ -41,7 +41,6 @@
 
 #define EXAMPLE_I2C_SDA_PIN (8)
 #define EXAMPLE_I2C_SCL_PIN (9)
-#define EXAMPLE_I2C_ADDR    (ESP_IO_EXPANDER_I2C_CH422G_ADDRESS)
 
 esp_expander::CH422G *expander = NULL;
 
@@ -50,7 +49,7 @@ void setup() {
   delay(1000);
   Serial.println("Test begin");
 
-  expander = new esp_expander::CH422G(EXAMPLE_I2C_SCL_PIN, EXAMPLE_I2C_SDA_PIN, EXAMPLE_I2C_ADDR);
+  expander = new esp_expander::CH422G(EXAMPLE_I2C_SCL_PIN, EXAMPLE_I2C_SDA_PIN);
   expander->init();
   expander->begin();
 

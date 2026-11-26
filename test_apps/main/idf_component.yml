@@ -4,4 +4,4 @@ dependencies:
     path: ${IDF_PATH}/tools/unit-test-app/components/test_utils
   ESP32_IO_Expander:
     version: "*"
-    override_path: "../../../ESP32_IO_Expander"
+    override_path: "../.."
